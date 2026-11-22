@@ -1,0 +1,1088 @@
+
+<!DOCTYPE html>
+<html lang="{{ current_language|default('en') }}" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard | Smart Weed Detection</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <script>
+        (function () {
+            try {
+                const theme = localStorage.getItem("weed-theme") || "light";
+                document.documentElement.setAttribute("data-theme", theme);
+            } catch (error) {
+                document.documentElement.setAttribute("data-theme", "light");
+            }
+        })();
+    </script>
+
+    <style>
+        :root {
+            --dash-page: #f3f8f3;
+            --dash-surface: #ffffff;
+            --dash-surface-secondary: #f0f7f0;
+            --dash-text: #203328;
+            --dash-heading: #145b3b;
+            --dash-muted: #607366;
+            --dash-border: #dce8de;
+            --dash-primary: #17633e;
+            --dash-shadow: 0 4px 16px rgba(23, 59, 36, 0.08);
+            --dash-user-message: #dcefe0;
+            --dash-user-text: #193b29;
+            --dash-weed: #e53935;
+            --dash-crop: #2e9d50;
+            --dash-input: #ffffff;
+        }
+
+        html[data-theme="dark"] {
+            --dash-page: #101d14;
+            --dash-surface: #162b1d;
+            --dash-surface-secondary: #203c29;
+            --dash-text: #edf6ed;
+            --dash-heading: #a9e2b6;
+            --dash-muted: #b6c9b9;
+            --dash-border: #385b42;
+            --dash-primary: #398c58;
+            --dash-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+            --dash-user-message: #294d35;
+            --dash-user-text: #edf6ed;
+            --dash-input: #203c29;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            color: var(--dash-text);
+            background: var(--dash-page);
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .container {
+            width: min(1200px, 94%);
+            margin: 28px auto 45px;
+        }
+
+        /* NAVIGATION */
+
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            flex-wrap: wrap;
+            padding: 14px 4%;
+            background: #064b3a;
+            color: #fff;
+        }
+
+        .brand {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+
+        .welcome {
+            color: #e6f4e9;
+        }
+
+        .dashboard-theme-toggle {
+            padding: 9px 13px;
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .dashboard-theme-toggle:hover {
+            background: rgba(255,255,255,0.23);
+        }
+
+        /* GENERAL PANELS */
+
+        .hero,
+        .panel {
+            background: var(--dash-surface);
+            color: var(--dash-text);
+            border: 1px solid var(--dash-border);
+            border-radius: 14px;
+            padding: 22px;
+            margin-bottom: 22px;
+            box-shadow: var(--dash-shadow);
+        }
+
+        .hero h1 {
+            margin: 0 0 8px;
+            color: var(--dash-heading);
+        }
+
+        .hero p,
+        .panel > p {
+            color: var(--dash-muted);
+            line-height: 1.55;
+        }
+
+        .panel h2 {
+            color: var(--dash-heading);
+        }
+
+        /* SUMMARY CARDS */
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 14px;
+            margin: 20px 0 24px;
+        }
+
+        .stat {
+            background: var(--dash-surface);
+            color: var(--dash-text);
+            border: 1px solid var(--dash-border);
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+            box-shadow: var(--dash-shadow);
+        }
+
+        .stat h3 {
+            font-size: 14px;
+            color: var(--dash-muted);
+            margin: 0 0 9px;
+        }
+
+        .stat strong {
+            font-size: 27px;
+            color: var(--dash-heading);
+        }
+
+        /* FIELD COMPARISON */
+
+        .field-section {
+            margin-top: 24px;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+            margin-top: 18px;
+        }
+
+        .chart-card,
+        .field-card {
+            background: var(--dash-surface);
+            color: var(--dash-text);
+            border: 1px solid var(--dash-border);
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: var(--dash-shadow);
+            min-width: 0;
+        }
+
+        .chart-card h3,
+        .field-card h3 {
+            color: var(--dash-heading);
+            margin: 0 0 10px;
+        }
+
+        .chart-card h3 {
+            font-size: 17px;
+        }
+
+        .field-analysis-count {
+            color: var(--dash-muted);
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .pie-layout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            flex-wrap: wrap;
+            min-height: 220px;
+        }
+
+        .pie-visual {
+            width: 175px;
+            height: 175px;
+            flex: 0 0 175px;
+            border-radius: 50%;
+            background: var(--dash-surface-secondary);
+            position: relative;
+            transition: background 0.3s ease;
+        }
+
+        .pie-visual::after {
+            content: "";
+            position: absolute;
+            inset: 38%;
+            border-radius: 50%;
+            background: var(--dash-surface);
+        }
+
+        .pie-legend {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            min-width: 155px;
+        }
+
+        .pie-legend li {
+            font-size: 13px;
+            margin: 12px 0;
+            color: var(--dash-text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 3px;
+            display: inline-block;
+            flex: 0 0 11px;
+        }
+
+        .weed-dot {
+            background: var(--dash-weed);
+        }
+
+        .crop-dot {
+            background: var(--dash-crop);
+        }
+
+        .chart-note {
+            color: var(--dash-muted);
+            font-size: 12px;
+            line-height: 1.5;
+            margin-top: 10px;
+        }
+
+        .empty-field {
+            padding: 18px;
+            background: var(--dash-surface-secondary);
+            border-radius: 10px;
+            color: var(--dash-muted);
+            text-align: center;
+        }
+
+        /* INDIVIDUAL FIELD STATISTICS */
+
+        .field-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin-top: 18px;
+        }
+
+        .field-card p {
+            color: var(--dash-muted);
+            line-height: 1.5;
+            margin: 7px 0;
+            overflow-wrap: anywhere;
+        }
+
+        .field-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .field-metric {
+            background: var(--dash-surface-secondary);
+            border: 1px solid var(--dash-border);
+            border-radius: 8px;
+            padding: 12px 7px;
+            text-align: center;
+        }
+
+        .field-metric span {
+            display: block;
+            font-size: 12px;
+            color: var(--dash-muted);
+            margin-bottom: 5px;
+        }
+
+        .field-metric strong {
+            color: var(--dash-heading);
+            font-size: 18px;
+        }
+
+        /* RECENT ANALYSES */
+
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--dash-border);
+            color: var(--dash-text);
+        }
+
+        th {
+            background: var(--dash-surface-secondary);
+            color: var(--dash-heading);
+        }
+
+        tbody tr:hover {
+            background: var(--dash-surface-secondary);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--dash-muted);
+        }
+
+        /* AI ASSISTANT */
+
+        #aiAssistant {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            z-index: 9999;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        #aiToggle {
+            width: 60px;
+            height: 60px;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            background: #064e3b;
+            color: #fff;
+            font-size: 27px;
+            box-shadow: 0 4px 18px #0004;
+            cursor: pointer;
+        }
+
+        #aiPanel {
+            display: none;
+            flex-direction: column;
+            width: min(370px, calc(100vw - 28px));
+            height: 490px;
+            max-height: 75vh;
+            margin-bottom: 10px;
+            border-radius: 14px;
+            overflow: hidden;
+            background: var(--dash-surface);
+            color: var(--dash-text);
+            box-shadow: var(--dash-shadow);
+            border: 1px solid var(--dash-border);
+        }
+
+        #aiPanel.open {
+            display: flex;
+        }
+
+        .ai-header {
+            background: #064b3a;
+            color: #fff;
+            padding: 11px 13px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #aiClose {
+            border: 0;
+            color: #fff;
+            background: transparent;
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .ai-language-row {
+            padding: 8px 10px;
+            background: var(--dash-surface-secondary);
+            border-bottom: 1px solid var(--dash-border);
+        }
+
+        #aiLanguageSelect {
+            width: 100%;
+            border: 1px solid var(--dash-border);
+            border-radius: 7px;
+            padding: 8px;
+            background: var(--dash-input);
+            color: var(--dash-text);
+        }
+
+        #aiChatMessages {
+            padding: 12px;
+            flex: 1;
+            overflow-y: auto;
+            background: var(--dash-page);
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .ai-message {
+            max-width: 90%;
+            border-radius: 11px;
+            padding: 9px 11px;
+            font-size: 14px;
+            line-height: 1.45;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .ai-user-message {
+            align-self: flex-end;
+            background: var(--dash-user-message);
+            color: var(--dash-user-text);
+        }
+
+        .ai-assistant-message {
+            align-self: flex-start;
+            background: var(--dash-surface);
+            color: var(--dash-text);
+            border: 1px solid var(--dash-border);
+        }
+
+        #aiStatus {
+            padding: 0 11px 6px;
+            color: var(--dash-muted);
+            font-size: 12px;
+            background: var(--dash-page);
+        }
+
+        #aiChatForm {
+            padding: 10px;
+            display: flex;
+            gap: 6px;
+            border-top: 1px solid var(--dash-border);
+            background: var(--dash-surface);
+        }
+
+        #aiChatInput {
+            min-width: 0;
+            flex: 1;
+            width: 100%;
+            border: 1px solid var(--dash-border);
+            border-radius: 8px;
+            padding: 10px;
+            background: var(--dash-input);
+            color: var(--dash-text);
+        }
+
+        #aiChatInput::placeholder {
+            color: var(--dash-muted);
+        }
+
+        #aiChatForm button {
+            border: 0;
+            border-radius: 8px;
+            padding: 9px 11px;
+            color: #fff;
+            background: #17633e;
+            cursor: pointer;
+        }
+
+        #aiMicButton {
+            min-width: 42px;
+        }
+
+        #aiMicButton.recording {
+            background: #b42318;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 650px) {
+            .navbar {
+                align-items: flex-start;
+            }
+
+            .nav-links {
+                gap: 12px;
+            }
+
+            #aiAssistant {
+                right: 12px;
+                bottom: 12px;
+            }
+
+            .field-metrics {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .container {
+                width: 94%;
+            }
+
+            .hero,
+            .panel {
+                padding: 16px;
+            }
+
+            .pie-layout {
+                gap: 10px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="leaf-layer" aria-hidden="true"></div>
+
+<nav class="navbar">
+    <div class="brand">🌱 Smart Weed Detection</div>
+
+    <div class="nav-links">
+        <span class="welcome">
+            Welcome, {{ customer['name'] }}
+        </span>
+
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('history') }}">History</a>
+        <a href="{{ url_for('profile') }}">Profile</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+
+        <button
+            type="button"
+            class="dashboard-theme-toggle"
+            id="dashboardThemeToggle"
+            aria-label="Change colour theme">
+            🌙 Dark Mode
+        </button>
+    </div>
+</nav>
+
+<main class="container">
+
+    <section class="hero glass">
+        <h1>Dashboard</h1>
+        <p>
+            Overview of your saved field analyses.
+            Compare weed and good plant coverage across your fields
+            using individual field pie charts.
+        </p>
+    </section>
+
+    <!-- OVERALL STATISTICS -->
+
+    <section class="stats">
+
+        <div class="stat">
+            <h3>Total Analyses</h3>
+            <strong>{{ total_analyses|default(0) }}</strong>
+        </div>
+
+        <div class="stat">
+            <h3>Average Weed Coverage</h3>
+            <strong>{{ average_weed|default(0) }}%</strong>
+        </div>
+
+        <div class="stat">
+            <h3>High Priority</h3>
+            <strong>{{ high_count|default(0) }}</strong>
+        </div>
+
+        <div class="stat">
+            <h3>Medium Priority</h3>
+            <strong>{{ medium_count|default(0) }}</strong>
+        </div>
+
+        <div class="stat">
+            <h3>Low Priority</h3>
+            <strong>{{ low_count|default(0) }}</strong>
+        </div>
+
+    </section>
+
+    <!-- FIELD-WISE PIE CHARTS -->
+
+    <section class="panel field-section">
+
+        <h2>Field-wise Comparison</h2>
+
+        <p>
+            Each pie chart compares the average weed coverage
+            with good plant (crop) coverage for one saved field.
+            Red represents weeds and green represents good plants.
+            Soil and background pixels are excluded from this comparison.
+        </p>
+
+        {% if field_analytics %}
+
+        <div class="chart-grid">
+
+            {% for item in field_analytics %}
+
+            <div class="chart-card">
+
+                <h3>🌱 {{ item['field_name'] }}</h3>
+
+                <div class="field-analysis-count">
+                    Total analyses: {{ item['total_analyses']|default(0) }}
+                </div>
+
+                <div class="pie-layout">
+
+                    <div
+                        class="pie-visual"
+                        id="fieldPie{{ loop.index }}"
+                        role="img"
+                        aria-label="Weed and good plant comparison for {{ item['field_name'] }}">
+                    </div>
+
+                    <ul
+                        class="pie-legend"
+                        id="fieldLegend{{ loop.index }}">
+                    </ul>
+
+                </div>
+
+                <div class="chart-note">
+                    Pie chart percentages represent the share of weed and crop pixels only.
+                    These two values add up to 100%.
+                </div>
+
+                <div class="field-metrics">
+
+                    <div class="field-metric">
+                        <span>Weed Coverage</span>
+                        <strong>
+                            {{ '%.2f'|format(item['weed_percentage']|default(0)|float) }}%
+                        </strong>
+                    </div>
+
+                    <div class="field-metric">
+                        <span>Good Plants (Crop)</span>
+                        <strong>
+                            {{ '%.2f'|format(item['crop_percentage']|default(0)|float) }}%
+                        </strong>
+                    </div>
+
+                </div>
+
+                <div class="chart-note">
+                    Coverage values above are percentages of the entire image.
+                    Soil/background is not included in the pie chart.
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% else %}
+
+        <div class="empty-field">
+            No field comparison data available yet.
+            Upload and analyse field images to generate graphs.
+        </div>
+
+        {% endif %}
+
+    </section>
+
+    <!-- INDIVIDUAL FIELD STATISTICS -->
+
+    <section class="panel field-section">
+
+        <h2>Individual Field Analysis</h2>
+
+        <p>
+            Average coverage statistics for each saved field.
+            No prediction images are displayed on this dashboard.
+        </p>
+
+        {% if field_analytics %}
+
+        <div class="field-grid">
+
+            {% for item in field_analytics %}
+
+            <article class="field-card">
+
+                <h3>🌱 {{ item['field_name'] or 'Unassigned Field' }}</h3>
+
+                <p>
+                    <strong>Total analyses:</strong>
+                    {{ item['total_analyses']|default(0) }}
+                </p>
+
+                <div class="field-metrics">
+
+                    <div class="field-metric">
+                        <span>Average Weed</span>
+                        <strong>
+                            {{ '%.2f'|format(item['weed_percentage']|default(0)|float) }}%
+                        </strong>
+                    </div>
+
+                    <div class="field-metric">
+                        <span>Average Good Plants</span>
+                        <strong>
+                            {{ '%.2f'|format(item['crop_percentage']|default(0)|float) }}%
+                        </strong>
+                    </div>
+
+                </div>
+
+            </article>
+
+            {% endfor %}
+
+        </div>
+
+        {% else %}
+
+        <div class="empty-field">
+            No field analyses have been saved yet.
+            Analyse a field image to view field-wise coverage statistics here.
+        </div>
+
+        {% endif %}
+
+    </section>
+
+</main>
+
+<footer class="footer">
+    Smart Weed Detection System | U-Net
+</footer>
+
+<!-- AI FARMING ASSISTANT -->
+
+<div id="aiAssistant">
+
+    <div
+        id="aiPanel"
+        aria-label="AI agricultural assistant"
+        aria-hidden="true">
+
+        <div class="ai-header">
+            <span>🌱 AI Farming Assistant</span>
+
+            <button
+                id="aiClose"
+                type="button"
+                aria-label="Close assistant">
+                ×
+            </button>
+        </div>
+
+        <div class="ai-language-row">
+
+            <label
+                for="aiLanguageSelect"
+                style="display:inline;margin:0 0 5px;font-size:12px">
+                Assistant language
+            </label>
+
+            <select
+                id="aiLanguageSelect"
+                aria-label="Assistant language">
+
+                <option value="auto" selected>Auto detect</option>
+                <option value="en">English</option>
+                <option value="te">తెలుగు</option>
+                <option value="ta">தமிழ்</option>
+                <option value="kn">ಕನ್ನಡ</option>
+                <option value="ml">മലയാളം</option>
+                <option value="hi">हिन्दी</option>
+
+            </select>
+
+        </div>
+
+        <div id="aiChatMessages" aria-live="polite" role="list">
+
+            <div
+                class="ai-message ai-assistant-message"
+                role="listitem">
+                Hello! Ask a question about weeds, field images,
+                or crop-safe weed management.
+            </div>
+
+        </div>
+
+        <div id="aiStatus" aria-live="polite">
+            Ready
+        </div>
+
+        <form id="aiChatForm">
+
+            <input
+                id="aiChatInput"
+                type="text"
+                placeholder="Ask a question…"
+                autocomplete="off"
+                aria-label="Ask the AI assistant"
+                required>
+
+            <button
+                id="aiMicButton"
+                type="button"
+                title="Start or stop speaking"
+                aria-label="Start voice recording">
+                🎙️
+            </button>
+
+            <button
+                type="submit"
+                aria-label="Send question">
+                ➤
+            </button>
+
+        </form>
+
+    </div>
+
+    <button
+        id="aiToggle"
+        type="button"
+        aria-expanded="false"
+        aria-label="Open AI assistant"
+        title="AI assistant">
+        💬
+    </button>
+
+</div>
+
+<script>
+/* THEME SWITCH */
+
+(function () {
+
+    const themeButton = document.getElementById("dashboardThemeToggle");
+
+    function applyTheme(theme) {
+
+        document.documentElement.setAttribute("data-theme", theme);
+
+        try {
+            localStorage.setItem("weed-theme", theme);
+        } catch (error) {
+            console.warn("Could not save theme preference.");
+        }
+
+        if (themeButton) {
+            themeButton.textContent =
+                theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode";
+        }
+    }
+
+    let currentTheme = "light";
+
+    try {
+        currentTheme = localStorage.getItem("weed-theme") || "light";
+    } catch (error) {
+        currentTheme = "light";
+    }
+
+    applyTheme(currentTheme);
+
+    if (themeButton) {
+        themeButton.addEventListener("click", function () {
+            const current =
+                document.documentElement.getAttribute("data-theme");
+
+            applyTheme(current === "dark" ? "light" : "dark");
+        });
+    }
+
+})();
+
+
+/* FIELD-WISE WEED VS GOOD PLANT PIE CHARTS */
+
+(function () {
+
+    const fieldData = [
+        {% for item in field_analytics|default([]) %}
+        {
+            name: {{ item['field_name']|default('Field')|tojson }},
+            weed: {{ item['weed_percentage']|default(0)|float }},
+            crop: {{ item['crop_percentage']|default(0)|float }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    function drawFieldPie(index, weedValue, cropValue) {
+
+        const chart = document.getElementById("fieldPie" + index);
+        const legend = document.getElementById("fieldLegend" + index);
+
+        if (!chart || !legend) return;
+
+        const weed = Math.max(0, Number(weedValue) || 0);
+        const crop = Math.max(0, Number(cropValue) || 0);
+        const total = weed + crop;
+
+        if (total <= 0) {
+            chart.style.background =
+                "var(--dash-surface-secondary)";
+
+            legend.replaceChildren();
+
+            const li = document.createElement("li");
+            li.textContent = "No weed or crop pixels recorded.";
+            legend.appendChild(li);
+
+            return;
+        }
+
+        // Normalize weed and crop shares to a combined 100%.
+        const weedShare = (weed / total) * 100;
+        const cropShare = (crop / total) * 100;
+        const weedAngle = (weedShare / 100) * 360;
+
+        chart.style.background =
+            `conic-gradient(
+                var(--dash-weed) 0deg ${weedAngle}deg,
+                var(--dash-crop) ${weedAngle}deg 360deg
+            )`;
+
+        legend.replaceChildren();
+
+        [
+            {
+                name: "Weed",
+                value: weedShare,
+                color: "var(--dash-weed)"
+            },
+            {
+                name: "Good Plants (Crop)",
+                value: cropShare,
+                color: "var(--dash-crop)"
+            }
+        ].forEach(function (entry) {
+
+            const li = document.createElement("li");
+            const dot = document.createElement("span");
+            const label = document.createElement("span");
+
+            dot.className = "legend-dot";
+            dot.style.background = entry.color;
+
+            label.textContent =
+                entry.name + ": " + entry.value.toFixed(2) + "%";
+
+            li.append(dot, label);
+            legend.appendChild(li);
+
+        });
+
+    }
+
+    fieldData.forEach(function (field, index) {
+        drawFieldPie(index + 1, field.weed, field.crop);
+    });
+
+})();
+
+
+/* AI ASSISTANT OPEN AND CLOSE */
+
+(function () {
+
+    const panel = document.getElementById("aiPanel");
+    const toggle = document.getElementById("aiToggle");
+    const close = document.getElementById("aiClose");
+
+    if (!panel || !toggle || !close) {
+        return;
+    }
+
+    function setOpen(open) {
+
+        panel.classList.toggle("open", open);
+
+        panel.setAttribute(
+            "aria-hidden",
+            String(!open)
+        );
+
+        toggle.setAttribute(
+            "aria-expanded",
+            String(open)
+        );
+
+        toggle.style.display =
+            open ? "none" : "inline-block";
+
+    }
+
+    toggle.addEventListener("click", function () {
+        setOpen(true);
+    });
+
+    close.addEventListener("click", function () {
+        setOpen(false);
+    });
+
+})();
+
+</script>
+
+<script
+    src="{{ url_for('static', filename='js/voice.js') }}"
+    defer>
+</script>
+
+<script
+    src="{{ url_for('static', filename='js/leaf-animation.js') }}"
+    defer>
+</script>
+
+</body>
+</html>

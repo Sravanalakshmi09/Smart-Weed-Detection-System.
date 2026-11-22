@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="{{ current_language|default('en') }}" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}{{ t('app_name') }}{% endblock %}</title>
+
+    <script>
+        (function () {
+            try {
+                const savedTheme = localStorage.getItem("weed-theme") || "light";
+                document.documentElement.setAttribute("data-theme", savedTheme);
+            } catch (error) {
+                document.documentElement.setAttribute("data-theme", "light");
+            }
+        })();
+    </script>
+
+    <style>
+        :root {
+            --page-overlay: rgba(245, 250, 244, 0.84);
+            --header-bg: rgba(238, 247, 237, 0.96);
+            --footer-bg: rgba(238, 247, 237, 0.96);
+            --surface: rgba(255, 255, 255, 0.96);
+            --surface-secondary: #f0f7f0;
+            --text: #193b29;
+            --muted: #637769;
+            --heading: #145b3b;
+            --border: #d6e5d8;
+            --primary: #17633e;
+            --primary-hover: #0c4c30;
+            --field-bg: #ffffff;
+            --field-text: #193b29;
+            --shadow: 0 5px 20px rgba(16, 50, 28, 0.10);
+            --link: #17633e;
+            --nav-hover-bg: #17633e;
+            --nav-hover-text: #ffffff;
+        }
+
+        html[data-theme="dark"] {
+            --page-overlay: rgba(5, 17, 10, 0.83);
+            --header-bg: rgba(13, 35, 22, 0.97);
+            --footer-bg: rgba(13, 35, 22, 0.97);
+            --surface: rgba(22, 43, 29, 0.97);
+            --surface-secondary: #203c29;
+            --text: #edf6ed;
+            --muted: #b6c9b9;
+            --heading: #a9e2b6;
+            --border: #385b42;
+            --primary: #398c58;
+            --primary-hover: #2b7547;
+            --field-bg: #f8fff8;
+            --field-text: #193b29;
+            --shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
+            --link: #a9e2b6;
+            --nav-hover-bg: #e3f4e5;
+            --nav-hover-text: #16452c;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            min-height: 100%;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background: #17251c;
+            position: relative;
+            isolation: isolate;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background-image: url("/statics/field-background.png");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: var(--page-overlay);
+            pointer-events: none;
+        }
+
+        a {
+            color: var(--link);
+        }
+
+        button,
+        input,
+        select,
+        textarea {
+            font: inherit;
+        }
+
+        /* HEADER */
+
+        .main-header {
+            width: 100%;
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            width: min(1200px, 94%);
+            margin: auto;
+            min-height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .brand {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--heading);
+            font-weight: 800;
+            font-size: 20px;
+        }
+
+        .brand-icon {
+            font-size: 29px;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .brand-tagline {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--muted);
+            letter-spacing: 0.5px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .header-navigation {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            display: inline-block;
+            text-decoration: none;
+            color: var(--text);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .nav-link:hover {
+            background: var(--nav-hover-bg);
+            color: var(--nav-hover-text);
+        }
+
+        .animated-link {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .animated-link:hover {
+            background: var(--primary-hover);
+            color: #ffffff;
+        }
+
+        /* LANGUAGE */
+
+        .language-select {
+            max-width: 125px;
+            padding: 9px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--field-bg);
+            color: var(--field-text);
+            cursor: pointer;
+        }
+
+        /* THEME */
+
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface-secondary);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .theme-toggle:hover {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        /* MOBILE MENU */
+
+        .mobile-menu-button {
+            display: none;
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface-secondary);
+            color: var(--text);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* MAIN */
+
+        main {
+            width: min(1200px, 94%);
+            margin: 28px auto;
+            flex: 1;
+        }
+
+        .card,
+        .dashboard-section,
+        .stat-card,
+        .profile-card,
+        .history-card,
+        .result-card {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            color: var(--heading);
+        }
+
+        /* FORMS */
+
+        input,
+        select,
+        textarea {
+            color: var(--field-text);
+            background: var(--field-bg);
+            border: 1px solid #b9cdbd;
+            border-radius: 7px;
+            padding: 10px 12px;
+            max-width: 100%;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: 2px solid #62a878;
+            outline-offset: 1px;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #718075;
+        }
+
+        /* BUTTONS */
+
+        button,
+        .btn {
+            cursor: pointer;
+        }
+
+        button[type="submit"],
+        .btn-primary {
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 11px 17px;
+            font-weight: 600;
+        }
+
+        button[type="submit"]:hover,
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        /* FLASH MESSAGES */
+
+        .flash-container {
+            margin-bottom: 18px;
+        }
+
+        .flash-message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+        }
+
+        .flash-success {
+            border-left: 5px solid #25834a;
+        }
+
+        .flash-error,
+        .flash-danger {
+            border-left: 5px solid #c0392b;
+        }
+
+        .flash-warning {
+            border-left: 5px solid #bd7911;
+        }
+
+        .flash-info {
+            border-left: 5px solid #2878a8;
+        }
+
+        /* TABLES */
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        th {
+            background: var(--surface-secondary);
+            color: var(--heading);
+        }
+
+        /* FOOTER */
+
+        .main-footer {
+            background: var(--footer-bg);
+            border-top: 1px solid var(--border);
+            color: var(--text);
+            padding: 20px 3%;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .main-footer p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        /* AI ASSISTANT */
+
+        .assistant-widget {
+            position: fixed;
+            right: 25px;
+            bottom: 25px;
+            width: 450px;
+            height: 620px;
+            max-width: calc(100vw - 30px);
+            max-height: calc(100vh - 110px);
+            z-index: 1500;
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.20);
+            overflow: hidden;
+        }
+
+        .assistant-header {
+            width: 100%;
+            min-height: 65px;
+            flex-shrink: 0;
+            padding: 14px 18px;
+            background: var(--primary);
+            color: #ffffff;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .assistant-header h3 {
+            color: #ffffff !important;
+            font-size: 17px;
+            font-weight: 700;
+            margin: 0;
+            padding: 0;
+            flex: 1;
+            text-align: left;
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+        }
+
+        .assistant-close {
+            flex-shrink: 0;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            color: #ffffff;
+            border: none;
+            font-size: 27px;
+            cursor: pointer;
+        }
+
+        .assistant-body {
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .assistant-messages {
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            max-height: none;
+            overflow-y: auto;
+            overflow-x: hidden;
+            margin-bottom: 14px;
+            padding: 5px;
+            font-size: 15px;
+        }
+
+        .assistant-message {
+            padding: 11px 14px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .assistant-user-message {
+            background: #e1f2e5;
+            color: #193b29;
+            margin-left: 35px;
+        }
+
+        .assistant-bot-message {
+            background: var(--surface-secondary);
+            color: var(--text);
+            margin-right: 35px;
+        }
+
+        .assistant-input-row {
+            width: 100%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .assistant-input-row input {
+            flex: 1;
+            width: 100%;
+            min-width: 0;
+            height: 45px;
+            font-size: 14px;
+        }
+
+        .assistant-input-row button {
+            flex-shrink: 0;
+            border: none;
+            border-radius: 8px;
+            padding: 11px 13px;
+            background: var(--primary);
+            color: #ffffff;
+            white-space: nowrap;
+        }
+
+        .assistant-input-row button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .assistant-launcher {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 1499;
+            border: none;
+            border-radius: 50px;
+            padding: 13px 18px;
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: var(--shadow);
+            font-weight: 700;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 900px) {
+            .header-container {
+                padding: 12px 0;
+            }
+
+            .header-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .header-navigation {
+                flex: 1;
+            }
+        }
+
+        @media (max-width: 650px) {
+            .header-container {
+                display: flex;
+                align-items: center;
+            }
+
+            .brand {
+                font-size: 17px;
+            }
+
+            .mobile-menu-button {
+                display: inline-block;
+            }
+
+            .header-right {
+                display: none;
+                width: 100%;
+                align-items: stretch;
+                flex-direction: column;
+                padding-bottom: 10px;
+            }
+
+            .header-right.menu-open {
+                display: flex;
+            }
+
+            .header-navigation {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .nav-link {
+                display: block;
+                width: 100%;
+            }
+
+            .language-select,
+            .theme-toggle {
+                width: 100%;
+                max-width: none;
+            }
+
+            main {
+                margin-top: 18px;
+                margin-bottom: 18px;
+            }
+
+            .assistant-widget {
+                right: 10px;
+                bottom: 10px;
+                width: calc(100vw - 20px);
+                height: 75vh;
+                max-height: 75vh;
+            }
+
+            .assistant-header {
+                min-height: 60px;
+            }
+
+            .assistant-header h3 {
+                font-size: 16px;
+            }
+
+            .assistant-launcher {
+                right: 12px;
+                bottom: 12px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+    <!-- HEADER -->
+
+    <header class="main-header">
+
+        <div class="header-container">
+
+            <a href="{{ url_for('home') }}" class="brand">
+
+                <span class="brand-icon">🌱</span>
+
+                <span class="brand-text">
+                    <span>{{ t('app_name') }}</span>
+                    <span class="brand-tagline">
+                        AI-Powered Smart Agriculture
+                    </span>
+                </span>
+
+            </a>
+
+            <button
+                type="button"
+                class="mobile-menu-button"
+                id="mobileMenuButton"
+                aria-label="Open navigation menu"
+                aria-expanded="false">
+                ☰
+            </button>
+
+            <div class="header-right" id="headerRight">
+
+                <nav class="header-navigation">
+
+                    <a href="{{ url_for('home') }}" class="nav-link">
+                        {{ t('home') }}
+                    </a>
+
+                    {% if session.get('customer_id') %}
+
+                        <a href="{{ url_for('dashboard') }}" class="nav-link">
+                            {{ t('dashboard') }}
+                        </a>
+
+                        <a href="{{ url_for('history') }}" class="nav-link">
+                            History
+                        </a>
+
+                        <a href="{{ url_for('profile') }}" class="nav-link">
+                            {{ t('profile') }}
+                        </a>
+
+                        <a href="{{ url_for('logout') }}" class="nav-link">
+                            {{ t('logout') }}
+                        </a>
+
+                    {% else %}
+
+                        <a href="{{ url_for('login') }}" class="nav-link">
+                            {{ t('login') }}
+                        </a>
+
+                        <a href="{{ url_for('register') }}" class="nav-link animated-link">
+                            {{ t('register') }}
+                        </a>
+
+                    {% endif %}
+
+                </nav>
+
+                <!-- LANGUAGE SELECTOR -->
+
+                <select
+                    class="language-select"
+                    id="languageSelector"
+                    aria-label="Select language">
+
+                    {% for code, language in supported_languages.items() %}
+
+                        <option
+                            value="{{ code }}"
+                            {% if current_language == code %}selected{% endif %}>
+                            {{ language }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+                <!-- THEME SWITCH -->
+
+                <button
+                    type="button"
+                    class="theme-toggle"
+                    id="themeToggle">
+
+                    <span id="themeIcon">🌙</span>
+                    <span id="themeLabel">Dark Mode</span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </header>
+
+    <!-- MAIN CONTENT -->
+
+    <main>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+                <div class="flash-container">
+
+                    {% for category, message in messages %}
+
+                        <div class="flash-message flash-{{ category }}">
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+
+    </main>
+
+    <!-- FOOTER -->
+
+    <footer class="main-footer">
+
+        <p>
+            © 2026 Smart Weed Detection System. All rights reserved.
+        </p>
+
+    </footer>
+
+    <!-- AI ASSISTANT -->
+
+    {% if session.get('customer_id') %}
+
+        <button
+            type="button"
+            class="assistant-launcher"
+            id="assistantLauncher">
+            💬 AI Assistant
+        </button>
+
+        <div class="assistant-widget" id="assistantWidget" hidden>
+
+            <div class="assistant-header">
+
+                <h3>🌱 Smart Agriculture Assistant</h3>
+
+                <button
+                    type="button"
+                    class="assistant-close"
+                    id="assistantClose"
+                    aria-label="Close assistant">
+                    ×
+                </button>
+
+            </div>
+
+            <div class="assistant-body">
+
+                <div
+                    class="assistant-messages"
+                    id="assistantMessages"
+                    aria-live="polite"
+                    aria-label="Assistant conversation">
+
+                    <div class="assistant-message assistant-bot-message">
+                        Hello! How can I help you with weed detection?
+                    </div>
+
+                </div>
+
+                <div class="assistant-input-row">
+
+                    <input
+                        type="text"
+                        id="assistantInput"
+                        placeholder="Ask something..."
+                        autocomplete="off"
+                        maxlength="2000">
+
+                    <button
+                        type="button"
+                        id="assistantMic"
+                        title="Voice input"
+                        aria-label="Voice input">
+                        🎤
+                    </button>
+
+                    <button
+                        type="button"
+                        id="assistantSend">
+                        Send
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    {% endif %}
+
+    <!-- COMMON JAVASCRIPT -->
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // LANGUAGE CHANGE
+
+            const languageSelector =
+                document.getElementById("languageSelector");
+
+            if (languageSelector) {
+
+                languageSelector.addEventListener("change", function () {
+
+                    const selectedLanguage = this.value;
+
+                    const languageUrl =
+                        "{{ url_for('set_language', language='__LANG__') }}";
+
+                    window.location.href =
+                        languageUrl.replace(
+                            "__LANG__",
+                            encodeURIComponent(selectedLanguage)
+                        );
+
+                });
+
+            }
+
+            // MOBILE MENU
+
+            const mobileButton =
+                document.getElementById("mobileMenuButton");
+
+            const headerRight =
+                document.getElementById("headerRight");
+
+            if (mobileButton && headerRight) {
+
+                mobileButton.addEventListener("click", function () {
+
+                    const isOpen =
+                        headerRight.classList.toggle("menu-open");
+
+                    mobileButton.setAttribute(
+                        "aria-expanded",
+                        isOpen ? "true" : "false"
+                    );
+
+                    mobileButton.textContent =
+                        isOpen ? "✕" : "☰";
+
+                });
+
+            }
+
+            // THEME SWITCH
+
+            const themeToggle =
+                document.getElementById("themeToggle");
+
+            const themeIcon =
+                document.getElementById("themeIcon");
+
+            const themeLabel =
+                document.getElementById("themeLabel");
+
+            function applyTheme(theme) {
+
+                document.documentElement.setAttribute(
+                    "data-theme",
+                    theme
+                );
+
+                try {
+                    localStorage.setItem("weed-theme", theme);
+                } catch (error) {
+                    console.warn("Could not save theme preference.");
+                }
+
+                if (theme === "dark") {
+
+                    if (themeIcon) {
+                        themeIcon.textContent = "☀️";
+                    }
+
+                    if (themeLabel) {
+                        themeLabel.textContent = "Light Mode";
+                    }
+
+                } else {
+
+                    if (themeIcon) {
+                        themeIcon.textContent = "🌙";
+                    }
+
+                    if (themeLabel) {
+                        themeLabel.textContent = "Dark Mode";
+                    }
+
+                }
+
+            }
+
+            let currentTheme = "light";
+
+            try {
+                currentTheme =
+                    localStorage.getItem("weed-theme") || "light";
+            } catch (error) {
+                currentTheme = "light";
+            }
+
+            applyTheme(currentTheme);
+
+            if (themeToggle) {
+
+                themeToggle.addEventListener("click", function () {
+
+                    const current =
+                        document.documentElement.getAttribute("data-theme");
+
+                    applyTheme(
+                        current === "dark" ? "light" : "dark"
+                    );
+
+                });
+
+            }
+
+        });
+    </script>
+
+    <!-- EXISTING PROJECT SCRIPTS -->
+
+    <script src="{{ url_for('static', filename='js/language.js') }}"></script>
+
+    {% if session.get('customer_id') %}
+        <script src="{{ url_for('static', filename='js/voice.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/assistant.js') }}"></script>
+    {% endif %}
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>

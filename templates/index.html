@@ -1,0 +1,1765 @@
+
+{% extends "base.html" %}
+
+{% block title %}Smart Weed Detection | Home{% endblock %}
+
+{% block extra_css %}
+<style>
+/* =====================================
+   THEME VARIABLES
+===================================== */
+
+html[data-theme="light"] {
+    --home-text: #233c2a;
+    --home-muted: #536b59;
+    --home-card: rgba(255,255,255,.93);
+    --home-card-border: #d5e5d5;
+    --home-inner: rgba(229,244,231,.75);
+    --home-upload: rgba(232,244,232,.75);
+    --home-button: #258447;
+    --home-button-text: #ffffff;
+    --home-button-hover: #176b36;
+    --home-link-bg: #e5f4e7;
+    --home-link-text: #124729;
+    --home-error: #a5232d;
+    --home-error-bg: #fde8e8;
+    --home-image-bg: #e9f0e9;
+}
+
+html[data-theme="dark"] {
+    --home-text: #ffffff;
+    --home-muted: #e2eee3;
+    --home-card: rgba(5,20,11,.88);
+    --home-card-border: rgba(255,255,255,.25);
+    --home-inner: rgba(255,255,255,.10);
+    --home-upload: rgba(255,255,255,.08);
+    --home-button: #ffffff;
+    --home-button-text: #000000;
+    --home-button-hover: #e5e5e5;
+    --home-link-bg: rgba(255,255,255,.12);
+    --home-link-text: #ffffff;
+    --home-error: #ffffff;
+    --home-error-bg: rgba(100,0,0,.85);
+    --home-image-bg: rgba(255,255,255,.10);
+}
+
+/* =====================================
+   GENERAL
+===================================== */
+
+html, body {
+    min-height: 100%;
+}
+
+body {
+    background: transparent !important;
+}
+
+.main-content {
+    min-height: 75vh;
+    background: transparent !important;
+}
+
+.home-container {
+    max-width: 1250px;
+    margin: 35px auto;
+    padding: 0 20px;
+    color: var(--home-text);
+}
+
+/* =====================================
+   HERO
+===================================== */
+
+.hero-section {
+    padding: 48px 30px;
+    text-align: center;
+    border-radius: 18px;
+    background: var(--home-card);
+    border: 1px solid var(--home-card-border);
+    margin-bottom: 30px;
+    box-shadow: 0 8px 25px rgba(0,0,0,.16);
+}
+
+.hero-section h1 {
+    color: var(--home-text);
+    font-size: clamp(27px,4vw,40px);
+    margin: 0 0 12px;
+    font-weight: 600;
+}
+
+.hero-section p {
+    color: var(--home-muted);
+    max-width: 760px;
+    margin: auto;
+    line-height: 1.8;
+    font-size: 15px;
+}
+
+/* =====================================
+   CARDS
+===================================== */
+
+.upload-card,
+.metric-card,
+.result-image-card,
+.details-card {
+    background: var(--home-card);
+    border: 1px solid var(--home-card-border);
+    box-shadow: 0 5px 22px rgba(0,0,0,.15);
+    color: var(--home-text);
+}
+
+.upload-card {
+    border-radius: 18px;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.section-heading {
+    color: var(--home-text);
+    font-size: 23px;
+    margin: 0 0 10px;
+    font-weight: 600;
+}
+
+.section-description {
+    color: var(--home-muted);
+    margin-bottom: 22px;
+    line-height: 1.7;
+}
+
+/* =====================================
+   FIELD SELECTION
+===================================== */
+
+.field-selection {
+    margin-bottom: 22px;
+}
+
+.field-selection label {
+    display: block;
+    color: var(--home-text);
+    margin-bottom: 9px;
+    font-weight: 600;
+}
+
+.field-selection select,
+.field-selection input {
+    width: 100%;
+    padding: 13px;
+    border-radius: 9px;
+    border: 1px solid var(--home-card-border);
+    background: var(--home-card);
+    color: var(--home-text);
+    font-size: 14px;
+    outline: none;
+}
+
+.field-selection select:focus,
+.field-selection input:focus {
+    border-color: #258447;
+    box-shadow: 0 0 0 2px rgba(37,132,71,.15);
+}
+
+.field-selection option {
+    background: var(--home-card);
+    color: var(--home-text);
+}
+
+/* =====================================
+   IMAGE UPLOAD
+===================================== */
+
+.upload-area {
+    display: block;
+    border: 2px dashed var(--home-muted);
+    border-radius: 15px;
+    padding: 38px 20px;
+    text-align: center;
+    background: var(--home-upload);
+    cursor: pointer;
+    transition: .25s;
+}
+
+.upload-area:hover {
+    border-color: #258447;
+    transform: translateY(-2px);
+}
+
+.upload-icon {
+    font-size: 45px;
+    color: var(--home-text);
+    margin-bottom: 12px;
+}
+
+.upload-area h3 {
+    color: var(--home-text);
+    margin: 5px 0;
+    font-weight: 600;
+}
+
+.upload-area p {
+    color: var(--home-muted);
+    font-size: 13px;
+}
+
+#imageInput {
+    display: none;
+}
+
+#imagePreview {
+    display: none;
+    max-width: 100%;
+    max-height: 300px;
+    margin: 20px auto 0;
+    border-radius: 12px;
+    object-fit: contain;
+    box-shadow: 0 3px 12px rgba(0,0,0,.2);
+}
+
+.selected-file {
+    color: var(--home-text);
+    font-size: 13px;
+    margin-top: 12px;
+    overflow-wrap: anywhere;
+}
+
+.upload-error {
+    display: none;
+    margin-top: 12px;
+    padding: 11px;
+    border-radius: 8px;
+    background: var(--home-error-bg);
+    color: var(--home-error);
+    font-size: 13px;
+    text-align: center;
+}
+
+/* =====================================
+   ANALYZE BUTTON
+===================================== */
+
+.analyze-button {
+    display: block;
+    width: 100%;
+    max-width: 350px;
+    margin: 22px auto 0;
+    padding: 15px 22px;
+    background: var(--home-button);
+    color: var(--home-button-text);
+    border: none;
+    border-radius: 11px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .25s;
+}
+
+.analyze-button:hover {
+    background: var(--home-button-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,.2);
+}
+
+.analyze-button:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.analyze-button i {
+    color: var(--home-button-text);
+}
+
+/* =====================================
+   GUEST COUNTER
+===================================== */
+
+.guest-counter {
+    margin-top: 20px;
+    padding: 14px;
+    text-align: center;
+    background: var(--home-inner);
+    color: var(--home-text);
+    border: 1px solid var(--home-card-border);
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.guest-counter strong {
+    color: var(--home-text);
+}
+
+.guest-warning {
+    border-color: #d99b35;
+}
+
+.login-note {
+    margin-top: 14px;
+    text-align: center;
+    color: var(--home-muted);
+    font-size: 13px;
+}
+
+.login-note a {
+    color: var(--home-text);
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.no-predictions {
+    padding: 18px;
+    text-align: center;
+    background: var(--home-inner);
+    border: 1px solid var(--home-card-border);
+    border-radius: 10px;
+    color: var(--home-text);
+}
+
+.no-predictions p {
+    margin: 8px 0;
+}
+
+.no-predictions a {
+    color: var(--home-text);
+    font-weight: bold;
+}
+
+/* =====================================
+   RESULTS
+===================================== */
+
+.results-section {
+    margin-top: 35px;
+    scroll-margin-top: 25px;
+}
+
+.results-title {
+    color: var(--home-text);
+    font-size: 27px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.results-subtitle {
+    color: var(--home-muted);
+    margin: 0 0 20px;
+    line-height: 1.6;
+}
+
+/* =====================================
+   METRICS
+===================================== */
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.metric-card {
+    border-radius: 14px;
+    padding: 22px 12px;
+    text-align: center;
+}
+
+.metric-card small {
+    color: var(--home-muted);
+    display: block;
+    margin-bottom: 10px;
+}
+
+.metric-card strong {
+    font-size: 25px;
+    color: var(--home-text);
+    overflow-wrap: anywhere;
+    font-weight: 600;
+}
+
+.metric-card.severity strong {
+    font-size: 20px;
+}
+
+/* =====================================
+   RESULT IMAGES
+===================================== */
+
+.result-images {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 18px;
+    margin: 25px 0;
+}
+
+.result-image-card {
+    border-radius: 15px;
+    padding: 15px;
+    overflow: hidden;
+}
+
+.result-image-card h3 {
+    color: var(--home-text);
+    font-size: 16px;
+    margin: 0 0 13px;
+    font-weight: 600;
+}
+
+.result-image-card img {
+    display: block;
+    width: 100%;
+    height: 250px;
+    object-fit: contain;
+    background: var(--home-image-bg);
+    border-radius: 10px;
+}
+
+.image-unavailable {
+    display: flex;
+    min-height: 180px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--home-text);
+    background: var(--home-image-bg);
+    border-radius: 10px;
+    padding: 15px;
+}
+
+/* =====================================
+   DETECTION DETAILS
+===================================== */
+
+.details-card {
+    border-radius: 15px;
+    padding: 22px;
+    margin-bottom: 20px;
+}
+
+.details-card h3 {
+    color: var(--home-text);
+    margin-top: 0;
+    margin-bottom: 17px;
+    font-weight: 600;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    gap: 13px;
+}
+
+.detail-item {
+    padding: 14px;
+    background: var(--home-inner);
+    border-radius: 9px;
+    color: var(--home-text);
+    overflow-wrap: anywhere;
+}
+
+.detail-item strong {
+    display: block;
+    color: var(--home-text);
+    margin-bottom: 5px;
+}
+
+/* =====================================
+   CLASS DISTRIBUTION
+===================================== */
+
+.class-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.class-list li {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--home-card-border);
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    color: var(--home-text);
+}
+
+.class-list li:last-child {
+    border-bottom: none;
+}
+
+.class-value {
+    color: var(--home-text);
+    font-weight: bold;
+}
+
+/* =====================================
+   RECOMMENDATIONS
+===================================== */
+
+.recommendation {
+    padding: 20px;
+    border-radius: 12px;
+    background: var(--home-inner);
+    border: 1px solid var(--home-card-border);
+    color: var(--home-text);
+    line-height: 1.75;
+}
+
+.recommendation h4 {
+    color: var(--home-text);
+    margin: 0 0 10px;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.recommendation p {
+    margin: 8px 0;
+    color: var(--home-text);
+}
+
+.recommendation ul {
+    padding-left: 22px;
+    margin: 10px 0;
+}
+
+.recommendation li {
+    color: var(--home-text);
+    margin-bottom: 7px;
+}
+
+.recommendation-note {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 8px;
+    background: var(--home-inner);
+    border: 1px solid var(--home-card-border);
+    color: var(--home-muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+/* =====================================
+   RESULT LINKS
+===================================== */
+
+.result-links {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin: 25px 0;
+}
+
+.result-links a {
+    padding: 13px 19px;
+    border-radius: 9px;
+    background: var(--home-link-bg);
+    border: 1px solid var(--home-card-border);
+    color: var(--home-link-text);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.result-links a:hover {
+    filter: brightness(.94);
+    text-decoration: underline;
+}
+
+/* =====================================
+   RESPONSIVE
+===================================== */
+
+@media(max-width:850px) {
+    .metrics-grid {
+        grid-template-columns: repeat(2,1fr);
+    }
+
+    .result-images {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .result-image-card:last-child {
+        grid-column: 1/-1;
+    }
+}
+
+@media(max-width:550px) {
+    .home-container {
+        padding: 0 12px;
+        margin-top: 20px;
+    }
+
+    .hero-section {
+        padding: 30px 17px;
+    }
+
+    .upload-card {
+        padding: 18px;
+    }
+
+    .result-images {
+        grid-template-columns: 1fr;
+    }
+
+    .result-image-card:last-child {
+        grid-column: auto;
+    }
+
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .metric-card strong {
+        font-size: 21px;
+    }
+
+    .result-links {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="home-container">
+
+    <!-- HERO SECTION -->
+
+    <section class="hero-section">
+
+        <h1>🌱 Smart Weed Detection System</h1>
+
+        <p>
+            Identify and analyze weeds in agricultural fields using
+            deep learning and U-Net image segmentation. Upload a field
+            image to identify crop and weed regions, estimate weed
+            coverage, and receive suitable management recommendations.
+        </p>
+
+    </section>
+
+
+    <!-- IMAGE UPLOAD -->
+
+    <section class="upload-card">
+
+        <h2 class="section-heading">
+            <i class="fas fa-camera"></i>
+            Upload Field Image
+        </h2>
+
+        <p class="section-description">
+            Select a clear image of an agricultural field or crop.
+            The system will analyze the image and display the prediction.
+            Supported formats: JPG, JPEG, PNG and WEBP.
+        </p>
+
+
+        {% set guest = not session.get('customer_id') %}
+        {% set used = session.get('free_predictions_used', 0)|int %}
+        {% set remaining = free_predictions_remaining|default(5-used)|int %}
+
+
+        {% if guest and remaining <= 0 %}
+
+            <div class="no-predictions">
+
+                <strong>Your five free predictions have been used.</strong>
+
+                <p>
+                    Please log in or register to continue using the system.
+                </p>
+
+                <a href="{{ url_for('login') }}">Login</a>
+                &nbsp; | &nbsp;
+                <a href="{{ url_for('register') }}">Register</a>
+
+            </div>
+
+        {% else %}
+
+            <form method="POST"
+                  action="{{ url_for('home') }}"
+                  enctype="multipart/form-data"
+                  id="uploadForm">
+
+
+                <!-- FIELD SELECTION -->
+
+                <div class="field-selection">
+
+                    {% if not guest %}
+
+                        <!-- REGISTERED USERS -->
+
+                        <label for="field_id">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Select Agricultural Field
+                        </label>
+
+                        <select id="field_id">
+
+                            <option value="">
+                                Select an existing field
+                            </option>
+
+                            {% for field in fields|default([]) %}
+
+                                <option value="{{ field.field_name }}">
+                                    {{ field.field_name }}
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                        <p style="color:var(--home-muted);
+                                  font-size:13px;margin:10px 0;">
+
+                            Or enter a new field name below.
+
+                        </p>
+
+                        <input type="text"
+                               id="new_field_name"
+                               maxlength="80"
+                               placeholder="Enter new field name">
+
+                        <!--
+                            This hidden input is the actual value
+                            submitted to app.py.
+                        -->
+
+                        <input type="hidden"
+                               name="field_name"
+                               id="field_name"
+                               value="">
+
+                    {% else %}
+
+                        <!-- GUEST USERS -->
+
+                        <label for="field_name">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Agricultural Field Name
+                        </label>
+
+                        <input type="text"
+                               name="field_name"
+                               id="field_name"
+                               maxlength="80"
+                               placeholder="Enter field name (e.g. North Field)"
+                               value="{{ request.form.get('field_name', '') }}"
+                               required>
+
+                    {% endif %}
+
+                    <p style="color:var(--home-muted);
+                              font-size:13px;margin:10px 0;">
+
+                        Enter the same field name for future images
+                        of the same agricultural field to group its
+                        analysis results.
+
+                    </p>
+
+                </div>
+
+
+                <!-- IMAGE INPUT -->
+
+                <label for="imageInput" class="upload-area">
+
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+
+                    <h3>Select an Image</h3>
+
+                    <p>
+                        Click here to browse and select your field image
+                    </p>
+
+                    <input type="file"
+                           name="image"
+                           id="imageInput"
+                           accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                           required>
+
+                    <img id="imagePreview"
+                         alt="Selected image preview">
+
+                    <div class="selected-file"
+                         id="selectedFile"></div>
+
+                    <div class="upload-error"
+                         id="uploadError"
+                         role="alert"></div>
+
+                </label>
+
+
+                <!-- ANALYZE BUTTON -->
+
+                <button type="submit"
+                        class="analyze-button"
+                        id="analyzeButton">
+
+                    <i class="fas fa-leaf"></i>
+                    Analyze Field Image
+
+                </button>
+
+            </form>
+
+        {% endif %}
+
+
+        <!-- GUEST PREDICTION COUNTER -->
+
+        {% if guest %}
+
+            <div class="guest-counter
+                {% if remaining <= 1 %}guest-warning{% endif %}">
+
+                <strong>Free Predictions</strong><br>
+
+                Used: {{ used }} / 5
+
+                &nbsp; | &nbsp;
+
+                Remaining: {{ remaining }}
+
+            </div>
+
+            <div class="login-note">
+
+                Create an account to access your saved analysis history.
+
+                <a href="{{ url_for('register') }}">
+                    Register here
+                </a>
+
+            </div>
+
+        {% else %}
+
+            <div class="login-note">
+
+                <i class="fas fa-check-circle"></i>
+
+                Your analyses are saved to your account history.
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- PREDICTION RESULTS -->
+
+    {% if result %}
+
+    <section class="results-section" id="predictionResults">
+
+        <h2 class="results-title">
+            <i class="fas fa-chart-pie"></i>
+            Field Analysis Results
+        </h2>
+
+        <p class="results-subtitle">
+
+            The following information belongs to your latest image analysis.
+            Previous analyses can be viewed from the History page.
+
+        </p>
+
+
+        <!-- METRICS -->
+
+        <div class="metrics-grid">
+
+            <div class="metric-card">
+
+                <small>Weed Coverage</small>
+
+                <strong>
+                    {{ "%.2f"|format(result.weed_percentage|default(0)|float) }}%
+                </strong>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <small>Crop Coverage</small>
+
+                <strong>
+                    {{ "%.2f"|format(result.crop_percentage|default(0)|float) }}%
+                </strong>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <small>Soil / Background</small>
+
+                <strong>
+                    {{ "%.2f"|format(result.soil_percentage|default(0)|float) }}%
+                </strong>
+
+            </div>
+
+
+            <div class="metric-card severity">
+
+                <small>Weed Severity</small>
+
+                <strong>
+                    {{ result.severity|default('N/A') }}
+                </strong>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <small>Confidence</small>
+
+                <strong>
+                    {{ "%.2f"|format(result.confidence|default(0)|float) }}%
+                </strong>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <small>Weed Pixels</small>
+
+                <strong>
+                    {{ result.weed_pixel_count|default(0) }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- RESULT IMAGES -->
+
+        <div class="result-images">
+
+
+            <!-- ORIGINAL IMAGE -->
+
+            <div class="result-image-card">
+
+                <h3>
+                    <i class="fas fa-image"></i>
+                    Original Image
+                </h3>
+
+                {% if result.source_filename %}
+
+                    <img
+                        src="{{ url_for('static', filename='uploads/' + result.source_filename) }}"
+                        alt="Original uploaded field image"
+                        loading="lazy">
+
+                {% else %}
+
+                    <div class="image-unavailable">
+                        Original image is not available.
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- OVERLAY -->
+
+            <div class="result-image-card">
+
+                <h3>
+                    <i class="fas fa-layer-group"></i>
+                    Segmentation Overlay
+                </h3>
+
+                {% if result.overlay_filename %}
+
+                    <img
+                        src="{{ url_for('static', filename='uploads/' + result.overlay_filename) }}"
+                        alt="U-Net segmentation overlay"
+                        loading="lazy">
+
+                {% else %}
+
+                    <div class="image-unavailable">
+                        Segmentation overlay is not available.
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- WEED MASK -->
+
+            <div class="result-image-card">
+
+                <h3>
+                    <i class="fas fa-vector-square"></i>
+                    Weed Mask
+                </h3>
+
+                {% if result.mask_filename %}
+
+                    <img
+                        src="{{ url_for('static', filename='uploads/' + result.mask_filename) }}"
+                        alt="Weed segmentation mask"
+                        loading="lazy">
+
+                {% else %}
+
+                    <div class="image-unavailable">
+                        Weed mask is not available.
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- DETECTION DETAILS -->
+
+        <div class="details-card">
+
+            <h3>
+                <i class="fas fa-info-circle"></i>
+                Detection Details
+            </h3>
+
+            <div class="details-grid">
+
+
+                <div class="detail-item">
+
+                    <strong>Field Name</strong>
+
+                    {{ result.field_name|default('Guest Field') }}
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <strong>Weed Location</strong>
+
+                    {{ result.location|default('Not available') }}
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <strong>Weed Pixel Count</strong>
+
+                    {{ result.weed_pixel_count|default(0) }}
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <strong>Suppression Status</strong>
+
+                    {{ result.suppression_status|default('Not started') }}
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <strong>Post-treatment Status</strong>
+
+                    {{ result.post_treatment_status|default('Not performed') }}
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <strong>Workflow Status</strong>
+
+                    {{ result.workflow_status|default('Analysis completed') }}
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <strong>Bounding Box</strong>
+
+                    {{ result.bbox|default('Not available') }}
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <strong>Inference Time</strong>
+
+                    {{ result.inference_time|default('N/A') }}
+
+                    {% if result.inference_time is defined %} seconds{% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- CLASS DISTRIBUTION -->
+
+        <div class="details-card">
+
+            <h3>
+                <i class="fas fa-chart-bar"></i>
+                Class Distribution
+            </h3>
+
+            <ul class="class-list">
+
+                <li>
+
+                    <span>Weed</span>
+
+                    <span class="class-value">
+                        {{ "%.2f"|format(result.weed_percentage|default(0)|float) }}%
+                    </span>
+
+                </li>
+
+                <li>
+
+                    <span>Crop</span>
+
+                    <span class="class-value">
+                        {{ "%.2f"|format(result.crop_percentage|default(0)|float) }}%
+                    </span>
+
+                </li>
+
+                <li>
+
+                    <span>Background / Soil</span>
+
+                    <span class="class-value">
+                        {{ "%.2f"|format(result.soil_percentage|default(0)|float) }}%
+                    </span>
+
+                </li>
+
+                <li>
+
+                    <strong>Total</strong>
+
+                    <strong class="class-value">
+
+                        {{ "%.2f"|format(
+                            (result.weed_percentage|default(0)|float)
+                            +
+                            (result.crop_percentage|default(0)|float)
+                            +
+                            (result.soil_percentage|default(0)|float)
+                        ) }}%
+
+                    </strong>
+
+                </li>
+
+            </ul>
+
+        </div>
+
+
+        <!-- WEED MANAGEMENT RECOMMENDATION -->
+
+        <div class="details-card">
+
+            <h3>
+                <i class="fas fa-lightbulb"></i>
+                Weed Management Recommendation
+            </h3>
+
+            {% set weed_percent =
+                result.weed_percentage|default(0)|float %}
+
+            <div class="recommendation">
+
+                {% if weed_percent < 5 %}
+
+                    <h4>Low Weed Coverage</h4>
+
+                    <p>
+                        The analysis indicates a low proportion of weed
+                        pixels in the uploaded field image. Most of the
+                        analyzed area is classified as background, soil,
+                        or crop.
+                    </p>
+
+                    <strong>Suggested actions:</strong>
+
+                    <ul>
+
+                        <li>
+                            Continue monitoring the field for newly emerging weeds.
+                        </li>
+
+                        <li>
+                            Inspect isolated detected weed regions to confirm
+                            the prediction.
+                        </li>
+
+                        <li>
+                            Consider localized weed removal or another
+                            suitable targeted control method where necessary.
+                        </li>
+
+                        <li>
+                            Repeat image analysis periodically to observe
+                            changes in weed coverage.
+                        </li>
+
+                    </ul>
+
+                    <p>
+                        <strong>Management priority:</strong>
+                        Routine monitoring and early intervention.
+                    </p>
+
+
+                {% elif weed_percent < 20 %}
+
+                    <h4>Moderate Weed Coverage</h4>
+
+                    <p>
+                        The analysis indicates a moderate proportion of
+                        weed pixels. Some areas may require attention to
+                        reduce competition between weeds and crops for
+                        sunlight, water, nutrients, and growing space.
+                    </p>
+
+                    <strong>Suggested actions:</strong>
+
+                    <ul>
+
+                        <li>
+                            Inspect highlighted weed regions and identify
+                            weed species where possible.
+                        </li>
+
+                        <li>
+                            Prioritize areas with concentrated weed growth.
+                        </li>
+
+                        <li>
+                            Consider targeted weed-control techniques
+                            appropriate for the crop and field.
+                        </li>
+
+                        <li>
+                            Avoid applying treatment directly to crop plants.
+                        </li>
+
+                        <li>
+                            Reassess affected areas through follow-up images.
+                        </li>
+
+                    </ul>
+
+                    <p>
+                        <strong>Management priority:</strong>
+                        Targeted control and continued crop protection.
+                    </p>
+
+
+                {% else %}
+
+                    <h4>High Weed Coverage</h4>
+
+                    <p>
+                        The analysis indicates a relatively high proportion
+                        of weed pixels in the uploaded image. The affected
+                        regions should be inspected to confirm the extent
+                        of infestation.
+                    </p>
+
+                    <strong>Suggested actions:</strong>
+
+                    <ul>
+
+                        <li>
+                            Conduct a field inspection to verify detected
+                            weed regions.
+                        </li>
+
+                        <li>
+                            Identify weed species and assess their growth
+                            stage before selecting treatment.
+                        </li>
+
+                        <li>
+                            Prioritize heavily affected areas for suitable
+                            weed management.
+                        </li>
+
+                        <li>
+                            Consider localized control methods only after
+                            checking crop safety and equipment suitability.
+                        </li>
+
+                        <li>
+                            Monitor the field after treatment to assess
+                            remaining or emerging weeds.
+                        </li>
+
+                    </ul>
+
+                    <p>
+                        <strong>Management priority:</strong>
+                        Detailed field inspection and a planned,
+                        crop-safe management approach.
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="recommendation-note">
+
+                <strong>Important safety note:</strong>
+
+                These recommendations are based on image segmentation
+                results and weed coverage estimates. They do not confirm
+                weed species or guarantee treatment effectiveness.
+                Verify detected regions and consult suitable agricultural
+                guidance before treatment.
+
+            </div>
+
+        </div>
+
+
+        <!-- RESULT NAVIGATION -->
+
+        <div class="result-links">
+
+            <a href="{{ url_for('home') }}">
+
+                <i class="fas fa-redo"></i>
+                Analyze Another Image
+
+            </a>
+
+
+            {% if session.get('customer_id') %}
+
+                <a href="{{ url_for('history') }}">
+
+                    <i class="fas fa-history"></i>
+                    View Analysis History
+
+                </a>
+
+            {% else %}
+
+                <a href="{{ url_for('register') }}">
+
+                    <i class="fas fa-user-plus"></i>
+                    Register to Save History
+
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    </section>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const imageInput = document.getElementById("imageInput");
+    const imagePreview = document.getElementById("imagePreview");
+    const selectedFile = document.getElementById("selectedFile");
+    const uploadError = document.getElementById("uploadError");
+    const analyzeButton = document.getElementById("analyzeButton");
+    const uploadForm = document.getElementById("uploadForm");
+
+    const fieldSelect = document.getElementById("field_id");
+    const newFieldInput = document.getElementById("new_field_name");
+    const fieldNameInput = document.getElementById("field_name");
+
+    const MAX_SIZE = 8 * 1024 * 1024;
+    const MAX_PIXELS = 16000000;
+
+    const ALLOWED_TYPES = [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+    ];
+
+
+    /* =====================================
+       ERROR DISPLAY
+    ===================================== */
+
+    function showUploadError(message) {
+
+        if (uploadError) {
+            uploadError.textContent = message;
+            uploadError.style.display = "block";
+        }
+    }
+
+
+    function clearUploadError() {
+
+        if (uploadError) {
+            uploadError.textContent = "";
+            uploadError.style.display = "none";
+        }
+    }
+
+
+    /* =====================================
+       RESET PREVIEW
+    ===================================== */
+
+    function resetPreview() {
+
+        if (imagePreview) {
+            imagePreview.style.display = "none";
+            imagePreview.removeAttribute("src");
+        }
+
+        if (selectedFile) {
+            selectedFile.textContent = "";
+        }
+    }
+
+
+    /* =====================================
+       IMAGE PREVIEW AND VALIDATION
+    ===================================== */
+
+    if (imageInput) {
+
+        imageInput.addEventListener("change", function () {
+
+            clearUploadError();
+
+            const file = this.files[0];
+
+            if (!file) {
+                resetPreview();
+                return;
+            }
+
+            if (!ALLOWED_TYPES.includes(file.type)) {
+
+                showUploadError(
+                    "Please select a JPG, JPEG, PNG or WEBP image."
+                );
+
+                this.value = "";
+                resetPreview();
+                return;
+            }
+
+
+            if (file.size > MAX_SIZE) {
+
+                showUploadError(
+                    "Image size must not exceed 8 MB."
+                );
+
+                this.value = "";
+                resetPreview();
+                return;
+            }
+
+
+            selectedFile.textContent =
+                "Selected: " + file.name;
+
+
+            const reader = new FileReader();
+
+
+            reader.onload = function (event) {
+
+                const image = new Image();
+
+                image.onload = function () {
+
+                    if (image.width * image.height > MAX_PIXELS) {
+
+                        showUploadError(
+                            "Image dimensions are too large. Please select a smaller image."
+                        );
+
+                        imageInput.value = "";
+                        resetPreview();
+                        return;
+                    }
+
+                    imagePreview.src = event.target.result;
+                    imagePreview.style.display = "block";
+                };
+
+
+                image.onerror = function () {
+
+                    showUploadError(
+                        "The selected file is not a valid image."
+                    );
+
+                    imageInput.value = "";
+                    resetPreview();
+                };
+
+
+                image.src = event.target.result;
+            };
+
+
+            reader.onerror = function () {
+
+                showUploadError(
+                    "Unable to read the selected image."
+                );
+            };
+
+
+            reader.readAsDataURL(file);
+
+        });
+
+    }
+
+
+    /* =====================================
+       FIELD SELECTION
+    ===================================== */
+
+    function updateFieldName() {
+
+        if (!fieldNameInput) {
+            return;
+        }
+
+        /* Registered user: existing field selected */
+
+        if (fieldSelect && fieldSelect.value.trim()) {
+
+            fieldNameInput.value = fieldSelect.value.trim();
+
+            if (newFieldInput) {
+                newFieldInput.value = "";
+            }
+
+            return;
+        }
+
+        /* Registered user: new field entered */
+
+        if (newFieldInput) {
+
+            fieldNameInput.value = newFieldInput.value.trim();
+
+            return;
+        }
+    }
+
+
+    if (fieldSelect && newFieldInput) {
+
+        fieldSelect.addEventListener("change", function () {
+
+            if (this.value) {
+
+                newFieldInput.value = "";
+
+            }
+
+            updateFieldName();
+
+            clearUploadError();
+
+        });
+
+
+        newFieldInput.addEventListener("input", function () {
+
+            if (this.value.trim()) {
+
+                fieldSelect.value = "";
+
+            }
+
+            updateFieldName();
+
+            clearUploadError();
+
+        });
+
+    }
+
+
+    /* =====================================
+       FORM SUBMISSION
+    ===================================== */
+
+    if (uploadForm && analyzeButton) {
+
+        uploadForm.addEventListener("submit", function (event) {
+
+            clearUploadError();
+
+
+            /* Update submitted field_name */
+
+            updateFieldName();
+
+
+            /* Validate field name */
+
+            if (!fieldNameInput || !fieldNameInput.value.trim()) {
+
+                event.preventDefault();
+
+                showUploadError(
+                    "Please select an existing field or enter an agricultural field name."
+                );
+
+                if (fieldSelect) {
+                    fieldSelect.focus();
+                } else if (fieldNameInput) {
+                    fieldNameInput.focus();
+                }
+
+                return;
+            }
+
+
+            if (fieldNameInput.value.trim().length > 80) {
+
+                event.preventDefault();
+
+                showUploadError(
+                    "Field name cannot exceed 80 characters."
+                );
+
+                return;
+            }
+
+
+            /* Validate image */
+
+            if (!imageInput || !imageInput.files.length) {
+
+                event.preventDefault();
+
+                showUploadError(
+                    "Please select a field image first."
+                );
+
+                return;
+            }
+
+
+            const file = imageInput.files[0];
+
+
+            if (!ALLOWED_TYPES.includes(file.type)) {
+
+                event.preventDefault();
+
+                showUploadError(
+                    "Invalid image format. Select JPG, PNG or WEBP."
+                );
+
+                return;
+            }
+
+
+            if (file.size > MAX_SIZE) {
+
+                event.preventDefault();
+
+                showUploadError(
+                    "Image size must not exceed 8 MB."
+                );
+
+                return;
+            }
+
+
+            /* Prevent repeated submission */
+
+            analyzeButton.disabled = true;
+
+            analyzeButton.innerHTML =
+                '<i class="fas fa-spinner fa-spin"></i> Analyzing Image...';
+
+        });
+
+    }
+
+
+    /* =====================================
+       SCROLL TO PREDICTION RESULTS
+    ===================================== */
+
+    const results = document.getElementById("predictionResults");
+
+    if (results) {
+
+        setTimeout(function () {
+
+            results.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+        }, 300);
+
+    }
+
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,433 @@
+
+{% extends "base.html" %}
+
+{% block title %}{{ t('profile') }} - {{ t('app_name') }}{% endblock %}
+
+{% block content %}
+
+<style>
+    .profile-page {
+        width: 100%;
+        max-width: 850px;
+        margin: auto;
+    }
+
+    .profile-header {
+        background: linear-gradient(135deg, #e5f3e6, #f8fbf6);
+        border: 1px solid #d8e8d9;
+        border-radius: 15px;
+        padding: 26px;
+        margin-bottom: 22px;
+    }
+
+    .profile-header h1 {
+        color: #064b3a;
+        margin: 0 0 10px;
+        font-size: 30px;
+    }
+
+    .profile-header p {
+        color: #5c7462;
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    .profile-card {
+        background: #fff;
+        border: 1px solid #dce8de;
+        border-radius: 14px;
+        padding: 25px;
+        box-shadow: 0 4px 16px #173b2410;
+    }
+
+    .profile-avatar {
+        width: 78px;
+        height: 78px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        border-radius: 50%;
+        background: #e5f3e6;
+        color: #17633e;
+        font-size: 35px;
+    }
+
+    .profile-name {
+        text-align: center;
+        color: #145b3b;
+        margin: 0 0 5px;
+        overflow-wrap: anywhere;
+    }
+
+    .profile-subtitle {
+        text-align: center;
+        color: #718075;
+        margin: 0 0 25px;
+        font-size: 14px;
+    }
+
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+    .form-group label {
+        display: block;
+        color: #315b3d;
+        font-weight: 600;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 12px 13px;
+        border: 1px solid #ceddd0;
+        border-radius: 8px;
+        background: #fbfdfb;
+        color: #18392b;
+        font-size: 15px;
+        font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: 2px solid #b6d9bd;
+        border-color: #398451;
+    }
+
+    .form-group textarea {
+        min-height: 90px;
+        resize: vertical;
+    }
+
+    .form-group input[readonly] {
+        background: #edf2ed;
+        color: #718075;
+        cursor: not-allowed;
+    }
+
+    .profile-button {
+        width: 100%;
+        padding: 13px;
+        border: 0;
+        border-radius: 8px;
+        background: #17633e;
+        color: #fff;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .profile-button:hover {
+        background: #0c4c30;
+    }
+
+    .profile-button:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    .profile-note {
+        margin-top: 15px;
+        color: #718075;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .profile-error {
+        display: none;
+        margin-bottom: 15px;
+        padding: 11px;
+        border-radius: 8px;
+        background: #ffebee;
+        color: #b71c1c;
+        font-size: 13px;
+    }
+
+    @media(max-width: 600px) {
+        .profile-card {
+            padding: 18px;
+        }
+
+        .profile-header {
+            padding: 21px;
+        }
+
+        .profile-header h1 {
+            font-size: 25px;
+        }
+    }
+</style>
+
+
+<div class="profile-page">
+
+    <!-- PROFILE HEADER -->
+
+    <section class="profile-header">
+
+        <h1>{{ t('profile') }}</h1>
+
+        <p>
+            View and update your account and farm information.
+        </p>
+
+    </section>
+
+
+    <!-- PROFILE DETAILS -->
+
+    <section class="profile-card">
+
+        <div class="profile-avatar">👤</div>
+
+        <h2 class="profile-name">
+            {{ customer['name']|default('User', true) }}
+        </h2>
+
+        <p class="profile-subtitle">
+            Smart Weed Detection System User
+        </p>
+
+
+        <form method="POST"
+              action="{{ url_for('profile') }}"
+              id="profileForm">
+
+            <div class="profile-error"
+                 id="profileError"
+                 role="alert">
+            </div>
+
+
+            <!-- FULL NAME -->
+
+            <div class="form-group">
+
+                <label for="name">
+                    Full Name
+                </label>
+
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value="{{ customer['name'] or '' }}"
+                    placeholder="Enter your full name"
+                    maxlength="100"
+                    autocomplete="name"
+                    required>
+
+            </div>
+
+
+            <!-- EMAIL -->
+
+            <div class="form-group">
+
+                <label for="email">
+                    Email Address
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    value="{{ customer['email'] or '' }}"
+                    readonly
+                    autocomplete="email">
+
+                <p class="profile-note">
+                    Your registered email address cannot be changed here.
+                </p>
+
+            </div>
+
+
+            <!-- PHONE NUMBER -->
+
+            <div class="form-group">
+
+                <label for="phone">
+                    Phone Number
+                </label>
+
+                <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value="{{ customer['phone'] or '' }}"
+                    placeholder="Enter your phone number"
+                    maxlength="20"
+                    autocomplete="tel"
+                    inputmode="tel">
+
+            </div>
+
+
+            <!-- FARM LOCATION -->
+
+            <div class="form-group">
+
+                <label for="farm_location">
+                    Farm Location
+                </label>
+
+                <textarea
+                    id="farm_location"
+                    name="farm_location"
+                    placeholder="Enter your farm location"
+                    maxlength="300">{{ customer['farm_location'] or '' }}</textarea>
+
+            </div>
+
+
+            <!-- SAVE BUTTON -->
+
+            <button type="submit"
+                    class="profile-button"
+                    id="saveProfileButton">
+
+                Save Profile Changes
+
+            </button>
+
+        </form>
+
+
+        <p class="profile-note">
+            Keep your profile information updated to maintain
+            accurate account details.
+        </p>
+
+    </section>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const form =
+        document.getElementById("profileForm");
+
+    const nameInput =
+        document.getElementById("name");
+
+    const phoneInput =
+        document.getElementById("phone");
+
+    const errorBox =
+        document.getElementById("profileError");
+
+    const saveButton =
+        document.getElementById("saveProfileButton");
+
+
+    function showError(message) {
+
+        errorBox.textContent = message;
+        errorBox.style.display = "block";
+
+    }
+
+
+    function clearError() {
+
+        errorBox.textContent = "";
+        errorBox.style.display = "none";
+
+    }
+
+
+    if (form) {
+
+        form.addEventListener("submit", function (event) {
+
+            clearError();
+
+            const name =
+                nameInput.value.trim();
+
+            const phone =
+                phoneInput.value.trim();
+
+
+            if (!name) {
+
+                event.preventDefault();
+
+                showError(
+                    "Please enter your full name."
+                );
+
+                nameInput.focus();
+
+                return;
+
+            }
+
+
+            if (name.length > 100) {
+
+                event.preventDefault();
+
+                showError(
+                    "Name cannot exceed 100 characters."
+                );
+
+                nameInput.focus();
+
+                return;
+
+            }
+
+
+            if (phone && !/^[0-9+\-\s()]{7,20}$/.test(phone)) {
+
+                event.preventDefault();
+
+                showError(
+                    "Please enter a valid phone number."
+                );
+
+                phoneInput.focus();
+
+                return;
+
+            }
+
+
+            saveButton.disabled = true;
+
+            saveButton.textContent = "Saving Profile...";
+
+        });
+
+    }
+
+
+    [nameInput, phoneInput].forEach(function (input) {
+
+        if (input) {
+
+            input.addEventListener("input", clearError);
+
+        }
+
+    });
+
+});
+
+</script>
+
+{% endblock %}

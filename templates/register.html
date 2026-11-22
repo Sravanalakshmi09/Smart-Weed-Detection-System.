@@ -1,0 +1,457 @@
+
+{% extends "base.html" %}
+
+{% block title %}{{ t('register') }} - {{ t('app_name') }}{% endblock %}
+
+{% block content %}
+
+<style>
+    .register-page {
+        min-height: 65vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 25px 12px;
+    }
+
+    .register-card {
+        width: 100%;
+        max-width: 490px;
+        background: #fff;
+        border: 1px solid #dce8de;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 7px 25px #173b2412;
+    }
+
+    .register-logo {
+        width: 75px;
+        height: 75px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto 15px;
+        background: #e5f3e6;
+        border-radius: 50%;
+        font-size: 37px;
+    }
+
+    .register-card h1 {
+        text-align: center;
+        color: #064b3a;
+        font-size: 27px;
+        margin: 0 0 9px;
+    }
+
+    .register-description {
+        text-align: center;
+        color: #718075;
+        font-size: 14px;
+        line-height: 1.6;
+        margin: 0 0 24px;
+    }
+
+    .register-group {
+        margin-bottom: 17px;
+    }
+
+    .register-group label {
+        display: block;
+        color: #315b3d;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .register-group input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 12px 13px;
+        border: 1px solid #ceddd0;
+        border-radius: 8px;
+        background: #fbfdfb;
+        color: #18392b;
+        font-size: 15px;
+    }
+
+    .register-group input:focus {
+        outline: 2px solid #b6d9bd;
+        border-color: #398451;
+    }
+
+    .password-wrapper {
+        position: relative;
+    }
+
+    .password-wrapper input {
+        padding-right: 48px;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        font-size: 18px;
+        padding: 5px;
+    }
+
+    .password-toggle:focus-visible {
+        outline: 2px solid #398451;
+        border-radius: 5px;
+    }
+
+    .password-help {
+        color: #718075;
+        font-size: 12px;
+        margin-top: 6px;
+        line-height: 1.5;
+    }
+
+    .register-button {
+        width: 100%;
+        padding: 13px;
+        border: 0;
+        border-radius: 8px;
+        background: #17633e;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 5px;
+    }
+
+    .register-button:hover {
+        background: #0c4c30;
+    }
+
+    .register-button:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    .register-footer {
+        text-align: center;
+        margin-top: 22px;
+        color: #718075;
+        font-size: 14px;
+        line-height: 1.8;
+    }
+
+    .register-footer a {
+        color: #17633e;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .register-footer a:hover {
+        text-decoration: underline;
+    }
+
+    .password-match {
+        font-size: 12px;
+        margin-top: 6px;
+    }
+
+    @media(max-width: 480px) {
+        .register-card {
+            padding: 23px 18px;
+        }
+    }
+</style>
+
+<div class="register-page">
+
+    <section class="register-card">
+
+        <div class="register-logo">🌱</div>
+
+        <h1>{{ t('register') }}</h1>
+
+        <p class="register-description">
+            Create an account to save your weed detection results,
+            view analysis history and access your dashboard.
+        </p>
+
+        <form
+            method="POST"
+            action="{{ url_for('register') }}"
+            id="registerForm"
+        >
+
+            <!-- Full name -->
+            <div class="register-group">
+
+                <label for="name">
+                    {{ t('full_name') }}
+                </label>
+
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    placeholder="Enter your full name"
+                    autocomplete="name"
+                    maxlength="100"
+                    required
+                >
+
+            </div>
+
+            <!-- Email -->
+            <div class="register-group">
+
+                <label for="email">
+                    {{ t('email') }}
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Enter your email address"
+                    autocomplete="email"
+                    maxlength="150"
+                    required
+                >
+
+            </div>
+
+            <!-- Phone -->
+            <div class="register-group">
+
+                <label for="phone">
+                    {{ t('phone') }}
+                </label>
+
+                <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    placeholder="Enter your phone number"
+                    autocomplete="tel"
+                    maxlength="20"
+                >
+
+            </div>
+
+            <!-- Password -->
+            <div class="register-group">
+
+                <label for="password">
+                    {{ t('password') }}
+                </label>
+
+                <div class="password-wrapper">
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Create a password"
+                        autocomplete="new-password"
+                        minlength="8"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        data-target="password"
+                        aria-label="Show password"
+                        aria-pressed="false"
+                    >
+                        👁
+                    </button>
+
+                </div>
+
+                <p class="password-help">
+                    Use at least 8 characters for your password.
+                </p>
+
+            </div>
+
+            <!-- Confirm password -->
+            <div class="register-group">
+
+                <label for="confirm_password">
+                    {{ t('confirm_password') }}
+                </label>
+
+                <div class="password-wrapper">
+
+                    <input
+                        type="password"
+                        id="confirm_password"
+                        name="confirm_password"
+                        placeholder="Re-enter your password"
+                        autocomplete="new-password"
+                        minlength="8"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        data-target="confirm_password"
+                        aria-label="Show password"
+                        aria-pressed="false"
+                    >
+                        👁
+                    </button>
+
+                </div>
+
+                <div
+                    id="passwordMessage"
+                    class="password-match"
+                    aria-live="polite"
+                ></div>
+
+            </div>
+
+            <button
+                type="submit"
+                class="register-button"
+                id="registerButton"
+            >
+                {{ t('create_account') }}
+            </button>
+
+        </form>
+
+        <div class="register-footer">
+
+            <p>
+                Already have an account?
+                <a href="{{ url_for('login') }}">
+                    {{ t('login') }}
+                </a>
+            </p>
+
+            <p>
+                <a href="{{ url_for('home') }}">
+                    Back to Home
+                </a>
+            </p>
+
+        </div>
+
+    </section>
+
+</div>
+
+<script>
+(function () {
+
+    const password = document.getElementById('password');
+
+    const confirmPassword =
+        document.getElementById('confirm_password');
+
+    const message =
+        document.getElementById('passwordMessage');
+
+    const form =
+        document.getElementById('registerForm');
+
+    const registerButton =
+        document.getElementById('registerButton');
+
+    if (!password || !confirmPassword || !form || !message) {
+        return;
+    }
+
+    // Show and hide passwords
+    document.querySelectorAll('.password-toggle').forEach(function (button) {
+
+        button.addEventListener('click', function () {
+
+            const target = document.getElementById(
+                button.dataset.target
+            );
+
+            if (!target) return;
+
+            const visible = target.type === 'password';
+
+            target.type = visible ? 'text' : 'password';
+
+            button.textContent = visible ? '🙈' : '👁';
+
+            button.setAttribute(
+                'aria-label',
+                visible ? 'Hide password' : 'Show password'
+            );
+
+            button.setAttribute(
+                'aria-pressed',
+                String(visible)
+            );
+
+        });
+
+    });
+
+    // Check whether passwords match
+    function checkPasswords() {
+
+        if (!confirmPassword.value) {
+            message.textContent = '';
+            return true;
+        }
+
+        if (password.value === confirmPassword.value) {
+
+            message.textContent = 'Passwords match.';
+            message.style.color = '#25834a';
+
+            return true;
+
+        }
+
+        message.textContent = 'Passwords do not match.';
+        message.style.color = '#c0392b';
+
+        return false;
+
+    }
+
+    password.addEventListener('input', checkPasswords);
+
+    confirmPassword.addEventListener('input', checkPasswords);
+
+    // Prevent submission if passwords do not match
+    form.addEventListener('submit', function (event) {
+
+        if (password.value !== confirmPassword.value) {
+
+            event.preventDefault();
+
+            message.textContent = 'Passwords do not match.';
+            message.style.color = '#c0392b';
+
+            confirmPassword.focus();
+
+            return;
+
+        }
+
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            return;
+        }
+
+        registerButton.disabled = true;
+        registerButton.textContent = 'Creating account...';
+
+    });
+
+})();
+</script>
+
+{% endblock %}

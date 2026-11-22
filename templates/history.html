@@ -1,0 +1,354 @@
+
+{% extends "base.html" %}
+
+{% block title %}{{ t('history') }} - {{ t('app_name') }}{% endblock %}
+
+{% block content %}
+
+<style>
+    .history-page {
+        width: 100%;
+        min-height: 70vh;
+    }
+
+    .history-header {
+        background: linear-gradient(135deg, #e5f3e6, #f8fbf6);
+        border: 1px solid #d8e8d9;
+        border-radius: 15px;
+        padding: 26px;
+        margin-bottom: 22px;
+    }
+
+    .history-header h1 {
+        color: #064b3a;
+        margin: 0 0 10px;
+        font-size: 30px;
+    }
+
+    .history-header p {
+        color: #5c7462;
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    .history-card {
+        background: #fff;
+        border: 1px solid #dce8de;
+        border-radius: 14px;
+        padding: 22px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 16px #173b2410;
+    }
+
+    .history-card h2 {
+        color: #145b3b;
+        margin: 0 0 18px;
+        font-size: 21px;
+    }
+
+    .history-count {
+        color: #617267;
+        font-size: 14px;
+        margin-bottom: 16px;
+    }
+
+    .history-count strong {
+        color: #17633e;
+    }
+
+    .history-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 9px;
+    }
+
+    .history-table {
+        width: 100%;
+        min-width: 750px;
+        border-collapse: collapse;
+    }
+
+    .history-table th,
+    .history-table td {
+        text-align: left;
+        padding: 14px 12px;
+        border-bottom: 1px solid #e7eee8;
+        font-size: 14px;
+    }
+
+    .history-table th {
+        background: #eff7ef;
+        color: #24583b;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .history-table tbody tr {
+        transition: background 0.2s ease;
+    }
+
+    .history-table tbody tr:hover {
+        background: #f4faf4;
+    }
+
+    .history-table td {
+        color: #52675a;
+        overflow-wrap: anywhere;
+    }
+
+    .severity {
+        display: inline-block;
+        padding: 5px 11px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .severity-high {
+        background: #fde8e6;
+        color: #a52b22;
+    }
+
+    .severity-medium {
+        background: #fff1d6;
+        color: #94600c;
+    }
+
+    .severity-low {
+        background: #e3f5e6;
+        color: #226b39;
+    }
+
+    .coverage-value {
+        color: #17633e;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .confidence-value {
+        white-space: nowrap;
+    }
+
+    .empty-history {
+        padding: 40px 15px;
+        text-align: center;
+        background: #f7faf7;
+        border: 1px dashed #cbdccc;
+        border-radius: 11px;
+        color: #65766a;
+    }
+
+    .empty-history .leaf {
+        font-size: 42px;
+        margin-bottom: 10px;
+    }
+
+    .empty-history h3 {
+        color: #24583b;
+        margin-bottom: 10px;
+    }
+
+    .empty-history p {
+        line-height: 1.6;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .history-button {
+        display: inline-block;
+        padding: 11px 18px;
+        border-radius: 8px;
+        background: #17633e;
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+        margin-top: 16px;
+        transition: background 0.2s ease;
+    }
+
+    .history-button:hover {
+        background: #0c4c30;
+        color: white;
+    }
+
+    .history-note {
+        margin-top: 16px;
+        padding: 12px 14px;
+        background: #f1f8f1;
+        border-left: 4px solid #39804e;
+        border-radius: 6px;
+        color: #52675a;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    @media(max-width: 600px) {
+        .history-card {
+            padding: 15px;
+        }
+
+        .history-header {
+            padding: 21px;
+        }
+
+        .history-header h1 {
+            font-size: 25px;
+        }
+    }
+</style>
+
+<div class="history-page">
+
+    <!-- PAGE HEADING -->
+
+    <section class="history-header">
+        <h1>{{ t('history') }}</h1>
+
+        <p>
+            View your previously saved Smart Weed Detection analyses.
+            Review weed coverage, severity, confidence and analysis dates.
+        </p>
+    </section>
+
+    <!-- HISTORY TABLE -->
+
+    <section class="history-card">
+
+        <h2>Saved Analysis Records</h2>
+
+        {% if analyses %}
+
+            <p class="history-count">
+                Total saved analyses:
+                <strong>{{ analyses|length }}</strong>
+            </p>
+
+            <div class="history-table-wrap">
+
+                <table class="history-table">
+
+                    <thead>
+                        <tr>
+                            <th>Analysis ID</th>
+                            <th>Image Name</th>
+                            <th>Analysis Date</th>
+                            <th>Weed Coverage</th>
+                            <th>Severity</th>
+                            <th>Confidence</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for item in analyses %}
+
+                            {% set image_name = item['original_filename']|default(item['filename']|default('Image', true), true) %}
+                            {% set analysis_date = item['created_at']|default('Not available', true) %}
+                            {% set weed_percentage = item['weed_percentage']|default(0, true)|float %}
+                            {% set severity_value = item['weed_severity']|default(item['severity']|default('Low', true), true) %}
+                            {% set severity = severity_value|string|lower %}
+                            {% set confidence = item['confidence']|default(none, true) %}
+
+                            <tr>
+
+                                <!-- ANALYSIS ID -->
+
+                                <td>
+                                    #{{ item['id']|default('N/A', true) }}
+                                </td>
+
+                                <!-- IMAGE NAME -->
+
+                                <td>
+                                    {{ image_name }}
+                                </td>
+
+                                <!-- ANALYSIS DATE -->
+
+                                <td>
+                                    {{ analysis_date }}
+                                </td>
+
+                                <!-- WEED COVERAGE -->
+
+                                <td>
+                                    <span class="coverage-value">
+                                        {{ "%.2f"|format(weed_percentage) }}%
+                                    </span>
+                                </td>
+
+                                <!-- SEVERITY -->
+
+                                <td>
+                                    <span class="severity
+                                        {% if 'high' in severity %}
+                                            severity-high
+                                        {% elif 'medium' in severity %}
+                                            severity-medium
+                                        {% else %}
+                                            severity-low
+                                        {% endif %}
+                                    ">
+                                        {{ severity_value }}
+                                    </span>
+                                </td>
+
+                                <!-- CONFIDENCE -->
+
+                                <td class="confidence-value">
+
+                                    {% if confidence is not none and confidence != '' %}
+                                        {{ "%.2f"|format(confidence|float) }}%
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <div class="history-note">
+                Your previous analysis records are displayed here.
+                New predictions will be saved to your history when the
+                analysis is successfully completed.
+            </div>
+
+        {% else %}
+
+            <!-- EMPTY HISTORY -->
+
+            <div class="empty-history">
+
+                <div class="leaf">🌱</div>
+
+                <h3>No Analysis History Found</h3>
+
+                <p>
+                    You have not saved any weed detection results yet.
+                    Upload a field image from the Home page to begin
+                    your first analysis.
+                </p>
+
+                <a href="{{ url_for('home') }}" class="history-button">
+                    Analyze an Image
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,328 @@
+
+{% extends "base.html" %}
+
+{% block title %}{{ t('login') }} - {{ t('app_name') }}{% endblock %}
+
+{% block content %}
+
+<style>
+    .login-page {
+        min-height: 65vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 25px 12px;
+    }
+
+    .login-card {
+        width: 100%;
+        max-width: 440px;
+        background: #fff;
+        border: 1px solid #dce8de;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 7px 25px #173b2412;
+    }
+
+    .login-logo {
+        width: 110px;
+        height: 110px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+        background: #e5f3e6;
+        border-radius: 50%;
+        overflow: hidden;
+    }
+
+    .login-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .login-card h1 {
+        text-align: center;
+        color: #064b3a;
+        font-size: 27px;
+        margin: 0 0 9px;
+    }
+
+    .login-description {
+        text-align: center;
+        color: #718075;
+        font-size: 14px;
+        line-height: 1.6;
+        margin: 0 0 25px;
+    }
+
+    .login-group {
+        margin-bottom: 19px;
+    }
+
+    .login-group label {
+        display: block;
+        color: #315b3d;
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .login-group input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 13px;
+        border: 1px solid #ceddd0;
+        border-radius: 8px;
+        background: #fbfdfb;
+        font-size: 15px;
+        color: #18392b;
+    }
+
+    .login-group input:focus {
+        outline: 2px solid #b6d9bd;
+        border-color: #398451;
+    }
+
+    .password-wrapper {
+        position: relative;
+    }
+
+    .password-wrapper input {
+        padding-right: 48px;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        font-size: 18px;
+        padding: 5px;
+    }
+
+    .password-toggle:focus-visible {
+        outline: 2px solid #398451;
+        border-radius: 5px;
+    }
+
+    .login-button {
+        width: 100%;
+        padding: 13px;
+        border: 0;
+        border-radius: 8px;
+        background: #17633e;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 5px;
+    }
+
+    .login-button:hover {
+        background: #0c4c30;
+    }
+
+    .login-button:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    .login-footer {
+        text-align: center;
+        margin-top: 22px;
+        color: #718075;
+        font-size: 14px;
+        line-height: 1.8;
+    }
+
+    .login-footer a {
+        color: #17633e;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .login-footer a:hover {
+        text-decoration: underline;
+    }
+
+    .login-security {
+        text-align: center;
+        color: #829087;
+        font-size: 12px;
+        margin-top: 20px;
+    }
+
+    @media(max-width: 480px) {
+        .login-card {
+            padding: 23px 18px;
+        }
+
+        .login-logo {
+            width: 100px;
+            height: 100px;
+        }
+    }
+</style>
+
+<div class="login-page">
+
+    <section class="login-card">
+
+        <div class="login-logo">
+            <img
+                src="{{ url_for('static', filename='images/crop_weeds_login.png') }}"
+                alt="Smart Weed Detection - Crops and Weeds"
+                onerror="this.style.display='none';"
+            >
+        </div>
+
+        <h1>{{ t('login') }}</h1>
+
+        <p class="login-description">
+            Welcome back! Sign in to access your Smart Weed Detection
+            dashboard and saved analysis history.
+        </p>
+
+        <form
+            method="POST"
+            action="{{ url_for('login') }}"
+            id="loginForm"
+        >
+
+            <div class="login-group">
+
+                <label for="email">
+                    {{ t('email') }}
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Enter your email address"
+                    autocomplete="email"
+                    maxlength="150"
+                    required
+                >
+
+            </div>
+
+            <div class="login-group">
+
+                <label for="password">
+                    {{ t('password') }}
+                </label>
+
+                <div class="password-wrapper">
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        id="togglePassword"
+                        aria-label="Show password"
+                        aria-pressed="false"
+                    >
+                        👁
+                    </button>
+
+                </div>
+
+            </div>
+
+            <button type="submit" class="login-button" id="loginButton">
+                {{ t('login') }}
+            </button>
+
+        </form>
+
+        <div class="login-footer">
+
+            <p>
+                Don't have an account?
+                <a href="{{ url_for('register') }}">
+                    {{ t('register') }}
+                </a>
+            </p>
+
+            <p>
+                <a href="{{ url_for('home') }}">
+                    Back to Home
+                </a>
+            </p>
+
+        </div>
+
+        <div class="login-security">
+            🔒 Your account information is protected.
+        </div>
+
+    </section>
+
+</div>
+
+<script>
+(function () {
+
+    const passwordInput = document.getElementById('password');
+    const toggleButton = document.getElementById('togglePassword');
+    const loginForm = document.getElementById('loginForm');
+    const loginButton = document.getElementById('loginButton');
+
+    if (passwordInput && toggleButton) {
+
+        toggleButton.addEventListener('click', function () {
+
+            const isPassword = passwordInput.type === 'password';
+
+            passwordInput.type = isPassword ? 'text' : 'password';
+
+            toggleButton.textContent = isPassword ? '🙈' : '👁';
+
+            toggleButton.setAttribute(
+                'aria-label',
+                isPassword ? 'Hide password' : 'Show password'
+            );
+
+            toggleButton.setAttribute(
+                'aria-pressed',
+                String(isPassword)
+            );
+
+        });
+
+    }
+
+    if (loginForm && loginButton) {
+
+        loginForm.addEventListener('submit', function () {
+
+            if (!loginForm.checkValidity()) {
+                return;
+            }
+
+            loginButton.disabled = true;
+            loginButton.textContent = 'Signing in...';
+
+        });
+
+    }
+
+})();
+</script>
+
+{% endblock %}
