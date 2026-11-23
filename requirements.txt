@@ -9,4 +9,4 @@ tensorflow==2.21.0
 torch
 transformers
 faster-whisper
-gunicorn
+gunicornai-edge-litert
