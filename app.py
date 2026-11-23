@@ -1,4 +1,12 @@
 import os
+
+# Keep CPU thread usage predictable on small Render instances.
+# These defaults are applied before TensorFlow is imported in load_model().
+os.environ.setdefault("TF_NUM_INTRAOP_THREADS", "1")
+os.environ.setdefault("TF_NUM_INTEROP_THREADS", "1")
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+
 import sqlite3
 import tempfile
 import requests
@@ -181,18 +189,48 @@ def load_model():
     if _model is None:
         if not MODEL_PATH.exists():
             raise FileNotFoundError(f'U-Net model not found:\n{MODEL_PATH}')
+
+        app.logger.info('PREDICTION: TensorFlow import starting')
+        tensorflow_started = time.perf_counter()
         import tensorflow as tf
+        app.logger.info(
+            'PREDICTION: TensorFlow import completed in %.2f seconds',
+            time.perf_counter() - tensorflow_started
+        )
+
+        # Prevent TensorFlow from creating too many CPU worker threads on Render.
+        try:
+            tf.config.threading.set_intra_op_parallelism_threads(
+                int(os.getenv('TF_NUM_INTRAOP_THREADS', '1'))
+            )
+            tf.config.threading.set_inter_op_parallelism_threads(
+                int(os.getenv('TF_NUM_INTEROP_THREADS', '1'))
+            )
+        except RuntimeError:
+            app.logger.warning(
+                'TensorFlow threading was already initialized; using existing settings.'
+            )
+
         gpu_devices = tf.config.list_physical_devices('GPU')
         for gpu in gpu_devices:
             try:
                 tf.config.experimental.set_memory_growth(gpu, True)
             except RuntimeError:
-                pass
+                app.logger.warning('Could not set GPU memory growth for %s', gpu)
+
         PROCESSING_DEVICE = 'GPU' if gpu_devices else 'CPU'
-        app.logger.info('U-Net device: %s', 'GPU (' + str(len(gpu_devices)) + ')' if gpu_devices else 'CPU')
+        app.logger.info(
+            'PREDICTION: Processing device: %s',
+            'GPU (' + str(len(gpu_devices)) + ')' if gpu_devices else 'CPU'
+        )
+
         model_load_started = time.perf_counter()
+        app.logger.info('PREDICTION: U-Net model loading started')
         _model = tf.keras.models.load_model(MODEL_PATH, compile=False)
-        app.logger.info('U-Net model loaded in %.2f seconds', time.perf_counter() - model_load_started)
+        app.logger.info(
+            'PREDICTION: U-Net model loading completed in %.2f seconds',
+            time.perf_counter() - model_load_started
+        )
     return _model
 
 def preprocess_image(image):
@@ -210,7 +248,12 @@ def is_likely_field_image(image, class_mask):
     A U-Net segmentation model is not itself a trained field/non-field classifier,
     so this combines its class predictions with field-like green/soil colors.
     """
-    hsv = np.asarray(image.convert('RGB').convert('HSV'), dtype=np.uint8)
+    # Sample at no more than 512 x 512. The original image can be up to
+    # 16 megapixels; converting all of it to HSV creates several large arrays
+    # and can exhaust memory on a small Render instance.
+    sample_image = image.convert('RGB')
+    sample_image.thumbnail((512, 512), Image.Resampling.BILINEAR)
+    hsv = np.asarray(sample_image.convert('HSV'), dtype=np.uint8)
     hue = hsv[:, :, 0].astype(np.float32) * (360.0 / 255.0)
     saturation = hsv[:, :, 1]
     value = hsv[:, :, 2]
@@ -342,6 +385,12 @@ def get_workflow_status():
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/home', methods=['GET', 'POST'])
 def home():
+    request_started = time.perf_counter()
+    app.logger.info(
+        'PREDICTION: Request started; method=%s path=%s',
+        request.method,
+        request.path
+    )
     customer_id = session.get('customer_id')
     customer = None
     if customer_id:
@@ -389,35 +438,80 @@ def home():
     base_name = Path(original_filename).stem + '_' + timestamp
     source_filename = base_name + extension
     source_path = UPLOAD_FOLDER / source_filename
+    app.logger.info(
+        'PREDICTION: Saving upload; filename=%s size_bytes=%s',
+        original_filename,
+        file_size
+    )
     file.save(source_path)
+    app.logger.info('PREDICTION: Upload saved')
+
     try:
+        image_started = time.perf_counter()
+        app.logger.info('PREDICTION: Opening and validating image')
         with Image.open(source_path) as opened_image:
             opened_image.load()
-            if opened_image.width * opened_image.height > MAX_IMAGE_PIXELS:
+            image_width, image_height = opened_image.size
+            app.logger.info(
+                'PREDICTION: Image opened; width=%s height=%s',
+                image_width,
+                image_height
+            )
+            if image_width * image_height > MAX_IMAGE_PIXELS:
                 source_path.unlink(missing_ok=True)
                 return render_home_error('Image contains too many pixels.', 400)
             image = opened_image.convert('RGB')
+
+        preprocess_started = time.perf_counter()
         original_image, input_array, original_width, original_height = preprocess_image(image)
+        app.logger.info(
+            'PREDICTION: Image preprocessing completed in %.2f seconds; model_input_shape=%s',
+            time.perf_counter() - preprocess_started,
+            input_array.shape
+        )
+        app.logger.info(
+            'PREDICTION: Image validation and preprocessing total %.2f seconds',
+            time.perf_counter() - image_started
+        )
     except Exception as e:
+        app.logger.exception('PREDICTION: Image opening or preprocessing failed')
         source_path.unlink(missing_ok=True)
         return render_home_error(f'Invalid image: {str(e)}', 400)
+
     try:
+        app.logger.info('PREDICTION: Requesting U-Net model')
         model = load_model()
+        app.logger.info('PREDICTION: Model is ready; starting U-Net inference')
         inference_started = time.perf_counter()
         prediction = model(input_array, training=False)
         if hasattr(prediction, 'numpy'):
             prediction = prediction.numpy()
+        app.logger.info('PREDICTION: Raw U-Net output received; shape=%s', np.shape(prediction))
         probabilities = normalize_prediction(prediction)
-        app.logger.info('U-Net inference completed in %.2f seconds', time.perf_counter() - inference_started)
-    except Exception as e:
-        app.logger.exception('U-Net prediction failed')
+        app.logger.info(
+            'PREDICTION: U-Net inference and normalization completed in %.2f seconds',
+            time.perf_counter() - inference_started
+        )
+    except Exception:
+        app.logger.exception('PREDICTION: U-Net prediction failed')
         source_path.unlink(missing_ok=True)
         return render_home_error('The U-Net model could not process this image. Check that the model file exists and is compatible.', 500)
+
     if probabilities.shape[-1] != 3:
+        app.logger.error('PREDICTION: Expected 3 output classes; received shape=%s', probabilities.shape)
         source_path.unlink(missing_ok=True)
         return render_home_error('The loaded U-Net model must return exactly three classes: Background/Soil, Crop, and Weed.', 500)
+
     class_mask = np.argmax(probabilities, axis=-1).astype(np.uint8)
-    if class_mask.ndim != 2 or not is_likely_field_image(original_image, class_mask):
+    validation_started = time.perf_counter()
+    app.logger.info('PREDICTION: Checking whether uploaded image is an agricultural field image')
+    is_field_image = class_mask.ndim == 2 and is_likely_field_image(original_image, class_mask)
+    app.logger.info(
+        'PREDICTION: Field-image validation completed in %.2f seconds; accepted=%s',
+        time.perf_counter() - validation_started,
+        is_field_image
+    )
+    if not is_field_image:
         source_path.unlink(missing_ok=True)
         return render_home_error('Invalid image. Please upload a clear agricultural field or crop image. Portraits, documents, objects, and unrelated photos cannot be analyzed.', 400)
     weed_mask = class_mask == WEED_CLASS_INDEX
@@ -479,6 +573,7 @@ def home():
         analysis_id = cursor.lastrowid
         conn.commit()
         conn.close()
+        app.logger.info('PREDICTION: Analysis record saved; analysis_id=%s', analysis_id)
     classes = {'Background/Soil': soil_percentage, 'Crop': crop_percentage, 'Weed': weed_percentage}
     result = {'success': True, 'analysis_id': analysis_id, 'field_name': field_name, 'crop_percentage': crop_percentage, 'soil_percentage': soil_percentage, 'device': PROCESSING_DEVICE, 'processing_device': PROCESSING_DEVICE, 'source_url': url_for('static', filename=f'uploads/{source_filename}'), 'original_image_url': url_for('static', filename=f'uploads/{source_filename}'), 'original_image': url_for('static', filename=f'uploads/{source_filename}'), 'overlay_url': url_for('static', filename=f'uploads/{overlay_filename}'), 'overlay_image_url': url_for('static', filename=f'uploads/{overlay_filename}'), 'segmentation_overlay_url': url_for('static', filename=f'uploads/{overlay_filename}'), 'weed_mask_url': url_for('static', filename=f'uploads/{weed_mask_filename}'), 'weed_mask_image_url': url_for('static', filename=f'uploads/{weed_mask_filename}'), 'filename': original_filename, 'weed_percentage': weed_percentage, 'weed_pixel_count': weed_pixel_count, 'weed_severity': severity, 'weed_location': location, 'weed_bbox': bbox, 'confidence': confidence, 'classes': classes, 'suppression_status': suppression['status'], 'suppression_recommendation': suppression['recommendation'], 'post_treatment_status': post_treatment_status, 'workflow_status': workflow_status}
     if customer_id is not None:
@@ -492,6 +587,14 @@ def home():
             customer_id = None
             customer = None
     used = min(int(session.get('free_predictions_used', 0)), FREE_PREDICTION_LIMIT)
+    app.logger.info(
+        'PREDICTION: Completed successfully in %.2f seconds; weed=%.2f%% crop=%.2f%% soil=%.2f%% device=%s',
+        time.perf_counter() - request_started,
+        weed_percentage,
+        crop_percentage,
+        soil_percentage,
+        PROCESSING_DEVICE
+    )
     return render_template('index.html', customer=customer, result=result, is_guest=customer_id is None, free_predictions_used=used, free_predictions_remaining=max(0, FREE_PREDICTION_LIMIT - used), saved_fields=get_saved_fields(customer_id) if customer_id else [])
 
 @app.route('/register', methods=['GET', 'POST'])
