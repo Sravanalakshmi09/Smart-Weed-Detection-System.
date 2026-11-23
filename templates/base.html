@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="{{ current_language|default('en') }}" data-theme="light">
 
@@ -662,7 +663,7 @@
                 <span class="brand-text">
                     <span>{{ t('app_name') }}</span>
                     <span class="brand-tagline">
-                        AI-Powered Smart Agriculture
+                        {{ t('tagline') }}
                     </span>
                 </span>
 
@@ -672,7 +673,7 @@
                 type="button"
                 class="mobile-menu-button"
                 id="mobileMenuButton"
-                aria-label="Open navigation menu"
+                aria-label="{{ t('open_menu') }}"
                 aria-expanded="false">
                 ☰
             </button>
@@ -692,7 +693,7 @@
                         </a>
 
                         <a href="{{ url_for('history') }}" class="nav-link">
-                            History
+                            {{ t('history') }}
                         </a>
 
                         <a href="{{ url_for('profile') }}" class="nav-link">
@@ -722,7 +723,7 @@
                 <select
                     class="language-select"
                     id="languageSelector"
-                    aria-label="Select language">
+                    aria-label="{{ t('select_language') }}">
 
                     {% for code, language in supported_languages.items() %}
 
@@ -741,10 +742,11 @@
                 <button
                     type="button"
                     class="theme-toggle"
-                    id="themeToggle">
+                    id="themeToggle"
+                    aria-label="{{ t('dark_mode') }}">
 
                     <span id="themeIcon">🌙</span>
-                    <span id="themeLabel">Dark Mode</span>
+                    <span id="themeLabel">{{ t('dark_mode') }}</span>
 
                 </button>
 
@@ -787,7 +789,7 @@
     <footer class="main-footer">
 
         <p>
-            © 2026 Smart Weed Detection System. All rights reserved.
+            © 2026 {{ t('footer') }}. All rights reserved.
         </p>
 
     </footer>
@@ -800,20 +802,20 @@
             type="button"
             class="assistant-launcher"
             id="assistantLauncher">
-            💬 AI Assistant
+            💬 {{ t('assistant') }}
         </button>
 
         <div class="assistant-widget" id="assistantWidget" hidden>
 
             <div class="assistant-header">
 
-                <h3>🌱 Smart Agriculture Assistant</h3>
+                <h3>🌱 {{ t('assistant_title') }}</h3>
 
                 <button
                     type="button"
                     class="assistant-close"
                     id="assistantClose"
-                    aria-label="Close assistant">
+                    aria-label="{{ t('close_assistant') }}">
                     ×
                 </button>
 
@@ -825,10 +827,10 @@
                     class="assistant-messages"
                     id="assistantMessages"
                     aria-live="polite"
-                    aria-label="Assistant conversation">
+                    aria-label="{{ t('assistant_conversation') }}">
 
                     <div class="assistant-message assistant-bot-message">
-                        Hello! How can I help you with weed detection?
+                        {{ t('assistant_welcome') }}
                     </div>
 
                 </div>
@@ -838,22 +840,22 @@
                     <input
                         type="text"
                         id="assistantInput"
-                        placeholder="Ask something..."
+                        placeholder="{{ t('assistant_placeholder') }}"
                         autocomplete="off"
                         maxlength="2000">
 
                     <button
                         type="button"
                         id="assistantMic"
-                        title="Voice input"
-                        aria-label="Voice input">
+                        title="{{ t('assistant_voice') }}"
+                        aria-label="{{ t('assistant_voice') }}">
                         🎤
                     </button>
 
                     <button
                         type="button"
                         id="assistantSend">
-                        Send
+                        {{ t('send') }}
                     </button>
 
                 </div>
@@ -869,6 +871,13 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
 
+            // TRANSLATED JAVASCRIPT TEXT
+
+            const commonTranslations = {
+                darkMode: {{ t('dark_mode')|tojson }},
+                lightMode: {{ t('light_mode')|tojson }}
+            };
+
             // LANGUAGE CHANGE
 
             const languageSelector =
@@ -880,6 +889,9 @@
 
                     const selectedLanguage = this.value;
 
+                    const currentPage =
+                        window.location.pathname + window.location.search;
+
                     const languageUrl =
                         "{{ url_for('set_language', language='__LANG__') }}";
 
@@ -887,7 +899,8 @@
                         languageUrl.replace(
                             "__LANG__",
                             encodeURIComponent(selectedLanguage)
-                        );
+                        ) +
+                        "?next=" + encodeURIComponent(currentPage);
 
                 });
 
@@ -951,7 +964,15 @@
                     }
 
                     if (themeLabel) {
-                        themeLabel.textContent = "Light Mode";
+                        themeLabel.textContent =
+                            commonTranslations.lightMode;
+                    }
+
+                    if (themeToggle) {
+                        themeToggle.setAttribute(
+                            "aria-label",
+                            commonTranslations.lightMode
+                        );
                     }
 
                 } else {
@@ -961,7 +982,15 @@
                     }
 
                     if (themeLabel) {
-                        themeLabel.textContent = "Dark Mode";
+                        themeLabel.textContent =
+                            commonTranslations.darkMode;
+                    }
+
+                    if (themeToggle) {
+                        themeToggle.setAttribute(
+                            "aria-label",
+                            commonTranslations.darkMode
+                        );
                     }
 
                 }

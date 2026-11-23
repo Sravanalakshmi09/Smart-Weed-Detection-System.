@@ -1,575 +1,634 @@
-
 <!DOCTYPE html>
 <html lang="{{ current_language|default('en') }}" data-theme="light">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dashboard | Smart Weed Detection</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>{{ t('dashboard') }} - {{ t('app_name') }}</title>
 
     <script>
         (function () {
             try {
-                const theme = localStorage.getItem("weed-theme") || "light";
-                document.documentElement.setAttribute("data-theme", theme);
+                const savedTheme = localStorage.getItem("weed-theme") || "light";
+                document.documentElement.setAttribute("data-theme", savedTheme);
             } catch (error) {
                 document.documentElement.setAttribute("data-theme", "light");
             }
         })();
     </script>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         :root {
-            --dash-page: #f3f8f3;
-            --dash-surface: #ffffff;
-            --dash-surface-secondary: #f0f7f0;
-            --dash-text: #203328;
-            --dash-heading: #145b3b;
-            --dash-muted: #607366;
-            --dash-border: #dce8de;
-            --dash-primary: #17633e;
-            --dash-shadow: 0 4px 16px rgba(23, 59, 36, 0.08);
-            --dash-user-message: #dcefe0;
-            --dash-user-text: #193b29;
-            --dash-weed: #e53935;
-            --dash-crop: #2e9d50;
-            --dash-input: #ffffff;
+            --page-overlay: rgba(245, 250, 244, 0.88);
+            --header-bg: rgba(238, 247, 237, 0.97);
+            --surface: rgba(255, 255, 255, 0.97);
+            --surface-secondary: #f0f7f0;
+            --text: #193b29;
+            --muted: #637769;
+            --heading: #145b3b;
+            --border: #d6e5d8;
+            --primary: #17633e;
+            --primary-hover: #0c4c30;
+            --shadow: 0 5px 20px rgba(16, 50, 28, 0.10);
+            --weed-color: #e74c3c;
+            --crop-color: #27ae60;
+            --soil-color: #d9c39a;
         }
 
         html[data-theme="dark"] {
-            --dash-page: #101d14;
-            --dash-surface: #162b1d;
-            --dash-surface-secondary: #203c29;
-            --dash-text: #edf6ed;
-            --dash-heading: #a9e2b6;
-            --dash-muted: #b6c9b9;
-            --dash-border: #385b42;
-            --dash-primary: #398c58;
-            --dash-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-            --dash-user-message: #294d35;
-            --dash-user-text: #edf6ed;
-            --dash-input: #203c29;
+            --page-overlay: rgba(5, 17, 10, 0.88);
+            --header-bg: rgba(13, 35, 22, 0.98);
+            --surface: rgba(22, 43, 29, 0.98);
+            --surface-secondary: #203c29;
+            --text: #edf6ed;
+            --muted: #b6c9b9;
+            --heading: #a9e2b6;
+            --border: #385b42;
+            --primary: #398c58;
+            --primary-hover: #2b7547;
+            --shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
+            --weed-color: #ff7468;
+            --crop-color: #55c982;
+            --soil-color: #c8ad7b;
         }
 
         * {
             box-sizing: border-box;
         }
 
+        html {
+            min-height: 100%;
+            scroll-behavior: smooth;
+        }
+
         body {
+            min-height: 100vh;
             margin: 0;
-            color: var(--dash-text);
-            background: var(--dash-page);
-            transition: background 0.2s ease, color 0.2s ease;
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background: #17251c;
+            position: relative;
+            isolation: isolate;
         }
 
-        .container {
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background-image: url("/statics/field-background.png");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: var(--page-overlay);
+            pointer-events: none;
+        }
+
+        button, select {
+            font: inherit;
+        }
+
+        /* HEADER */
+
+        .main-header {
+            width: 100%;
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
             width: min(1200px, 94%);
-            margin: 28px auto 45px;
-        }
-
-        /* NAVIGATION */
-
-        .navbar {
+            margin: auto;
+            min-height: 76px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 18px;
+            gap: 15px;
             flex-wrap: wrap;
-            padding: 14px 4%;
-            background: #064b3a;
-            color: #fff;
         }
 
         .brand {
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .nav-links {
+            text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 10px;
+            color: var(--heading);
+            font-weight: 800;
+            font-size: 20px;
+        }
+
+        .brand-icon {
+            font-size: 29px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
             flex-wrap: wrap;
         }
 
-        .nav-links a {
-            color: #fff;
+        .header-navigation {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            display: inline-block;
             text-decoration: none;
-        }
-
-        .nav-links a:hover {
-            text-decoration: underline;
-        }
-
-        .welcome {
-            color: #e6f4e9;
-        }
-
-        .dashboard-theme-toggle {
-            padding: 9px 13px;
-            border: 1px solid rgba(255,255,255,0.4);
+            color: var(--text);
+            padding: 10px 12px;
             border-radius: 8px;
-            background: rgba(255,255,255,0.12);
-            color: #fff;
+            font-size: 14px;
             font-weight: 600;
+        }
+
+        .nav-link:hover {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .language-select,
+        .theme-toggle {
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface-secondary);
+            color: var(--text);
             cursor: pointer;
         }
 
-        .dashboard-theme-toggle:hover {
-            background: rgba(255,255,255,0.23);
+        .language-select {
+            max-width: 135px;
+            background: #ffffff;
+            color: #193b29;
         }
 
-        /* GENERAL PANELS */
-
-        .hero,
-        .panel {
-            background: var(--dash-surface);
-            color: var(--dash-text);
-            border: 1px solid var(--dash-border);
-            border-radius: 14px;
-            padding: 22px;
-            margin-bottom: 22px;
-            box-shadow: var(--dash-shadow);
+        .theme-toggle {
+            font-size: 13px;
+            font-weight: 600;
         }
 
-        .hero h1 {
-            margin: 0 0 8px;
-            color: var(--dash-heading);
+        /* MAIN */
+
+        .container {
+            width: min(1200px, 94%);
+            margin: 30px auto;
         }
 
-        .hero p,
-        .panel > p {
-            color: var(--dash-muted);
-            line-height: 1.55;
+        .page-heading {
+            margin-bottom: 25px;
         }
 
-        .panel h2 {
-            color: var(--dash-heading);
+        .page-heading h1 {
+            color: var(--heading);
+            margin: 0 0 10px;
+            font-size: 30px;
         }
 
-        /* SUMMARY CARDS */
+        .page-heading p {
+            color: var(--muted);
+            line-height: 1.7;
+            margin: 0;
+        }
 
-        .stats {
+        /* STATISTICS */
+
+        .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-            gap: 14px;
-            margin: 20px 0 24px;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
         }
 
-        .stat {
-            background: var(--dash-surface);
-            color: var(--dash-text);
-            border: 1px solid var(--dash-border);
-            border-radius: 12px;
-            padding: 18px;
-            text-align: center;
-            box-shadow: var(--dash-shadow);
-        }
-
-        .stat h3 {
-            font-size: 14px;
-            color: var(--dash-muted);
-            margin: 0 0 9px;
-        }
-
-        .stat strong {
-            font-size: 27px;
-            color: var(--dash-heading);
-        }
-
-        /* FIELD COMPARISON */
-
-        .field-section {
-            margin-top: 24px;
-        }
-
-        .chart-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 18px;
-            margin-top: 18px;
-        }
-
-        .chart-card,
-        .field-card {
-            background: var(--dash-surface);
-            color: var(--dash-text);
-            border: 1px solid var(--dash-border);
-            border-radius: 14px;
-            padding: 18px;
-            box-shadow: var(--dash-shadow);
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            padding: 22px 17px;
+            box-shadow: var(--shadow);
             min-width: 0;
         }
 
-        .chart-card h3,
-        .field-card h3 {
-            color: var(--dash-heading);
-            margin: 0 0 10px;
+        .stat-card h3 {
+            font-size: 14px;
+            color: var(--muted);
+            font-weight: 600;
+            margin: 0 0 13px;
         }
 
-        .chart-card h3 {
-            font-size: 17px;
+        .stat-value {
+            font-size: 27px;
+            font-weight: 800;
+            color: var(--heading);
+            overflow-wrap: anywhere;
         }
 
-        .field-analysis-count {
-            color: var(--dash-muted);
-            font-size: 13px;
-            margin-bottom: 12px;
+        .stat-card.high .stat-value {
+            color: #d9483b;
         }
 
-        .pie-layout {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 18px;
-            flex-wrap: wrap;
-            min-height: 220px;
+        .stat-card.medium .stat-value {
+            color: #d28b18;
         }
 
-        .pie-visual {
-            width: 175px;
-            height: 175px;
-            flex: 0 0 175px;
-            border-radius: 50%;
-            background: var(--dash-surface-secondary);
-            position: relative;
-            transition: background 0.3s ease;
+        .stat-card.low .stat-value {
+            color: #239b56;
         }
 
-        .pie-visual::after {
-            content: "";
-            position: absolute;
-            inset: 38%;
-            border-radius: 50%;
-            background: var(--dash-surface);
+        /* SECTIONS */
+
+        .dashboard-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow);
         }
 
-        .pie-legend {
-            list-style: none;
+        .section-heading {
+            margin-bottom: 20px;
+        }
+
+        .section-heading h2 {
+            color: var(--heading);
+            font-size: 21px;
+            margin: 0 0 9px;
+        }
+
+        .section-heading p {
+            color: var(--muted);
+            line-height: 1.6;
             margin: 0;
-            padding: 0;
-            min-width: 155px;
+            font-size: 14px;
         }
 
-        .pie-legend li {
-            font-size: 13px;
-            margin: 12px 0;
-            color: var(--dash-text);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .legend-dot {
-            width: 11px;
-            height: 11px;
-            border-radius: 3px;
-            display: inline-block;
-            flex: 0 0 11px;
-        }
-
-        .weed-dot {
-            background: var(--dash-weed);
-        }
-
-        .crop-dot {
-            background: var(--dash-crop);
-        }
-
-        .chart-note {
-            color: var(--dash-muted);
-            font-size: 12px;
-            line-height: 1.5;
-            margin-top: 10px;
-        }
-
-        .empty-field {
-            padding: 18px;
-            background: var(--dash-surface-secondary);
-            border-radius: 10px;
-            color: var(--dash-muted);
-            text-align: center;
-        }
-
-        /* INDIVIDUAL FIELD STATISTICS */
+        /* FIELD COMPARISON */
 
         .field-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 18px;
-            margin-top: 18px;
         }
 
-        .field-card p {
-            color: var(--dash-muted);
-            line-height: 1.5;
-            margin: 7px 0;
+        .field-card {
+            background: var(--surface-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            min-width: 0;
+        }
+
+        .field-card h3 {
+            color: var(--heading);
+            font-size: 17px;
+            margin: 0 0 8px;
             overflow-wrap: anywhere;
         }
 
-        .field-metrics {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-top: 15px;
+        .field-card p {
+            color: var(--muted);
+            font-size: 13px;
+            margin: 5px 0;
         }
 
-        .field-metric {
-            background: var(--dash-surface-secondary);
-            border: 1px solid var(--dash-border);
-            border-radius: 8px;
-            padding: 12px 7px;
-            text-align: center;
+        .chart-wrapper {
+            width: 100%;
+            max-width: 280px;
+            height: 230px;
+            margin: 15px auto;
+            position: relative;
         }
 
-        .field-metric span {
-            display: block;
+        .chart-wrapper canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .chart-legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        .weed-color {
+            background: var(--weed-color);
+        }
+
+        .crop-color {
+            background: var(--crop-color);
+        }
+
+        .soil-color {
+            background: var(--soil-color);
+        }
+
+        .chart-note {
             font-size: 12px;
-            color: var(--dash-muted);
-            margin-bottom: 5px;
-        }
-
-        .field-metric strong {
-            color: var(--dash-heading);
-            font-size: 18px;
-        }
-
-        /* RECENT ANALYSES */
-
-        .table-wrap {
-            width: 100%;
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 650px;
-        }
-
-        th,
-        td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--dash-border);
-            color: var(--dash-text);
-        }
-
-        th {
-            background: var(--dash-surface-secondary);
-            color: var(--dash-heading);
-        }
-
-        tbody tr:hover {
-            background: var(--dash-surface-secondary);
-        }
-
-        .footer {
+            color: var(--muted);
             text-align: center;
+            line-height: 1.5;
+            margin-top: 13px;
+        }
+
+        .empty-state {
+            padding: 35px 20px;
+            text-align: center;
+            background: var(--surface-secondary);
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        /* INDIVIDUAL FIELD STATISTICS */
+
+        .field-stat-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 15px;
+        }
+
+        .field-stat-card {
+            background: var(--surface-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+        }
+
+        .field-stat-card h3 {
+            color: var(--heading);
+            margin: 0 0 15px;
+            overflow-wrap: anywhere;
+        }
+                .field-stat-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 9px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .field-stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .field-stat-row span:first-child {
+            color: var(--muted);
+        }
+
+        .field-stat-row strong {
+            color: var(--text);
+            text-align: right;
+        }
+
+        /* FOOTER */
+
+        .main-footer {
+            background: var(--header-bg);
+            border-top: 1px solid var(--border);
+            color: var(--muted);
             padding: 20px;
-            color: var(--dash-muted);
+            text-align: center;
+            font-size: 13px;
         }
 
         /* AI ASSISTANT */
 
-        #aiAssistant {
+        .assistant-widget {
             position: fixed;
-            right: 22px;
-            bottom: 22px;
-            z-index: 9999;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
-        #aiToggle {
-            width: 60px;
-            height: 60px;
-            border: 3px solid #fff;
-            border-radius: 50%;
-            background: #064e3b;
-            color: #fff;
-            font-size: 27px;
-            box-shadow: 0 4px 18px #0004;
-            cursor: pointer;
-        }
-
-        #aiPanel {
-            display: none;
+            right: 25px;
+            bottom: 25px;
+            width: 450px;
+            height: 620px;
+            max-width: calc(100vw - 30px);
+            max-height: calc(100vh - 110px);
+            z-index: 1500;
+            display: flex;
             flex-direction: column;
-            width: min(370px, calc(100vw - 28px));
-            height: 490px;
-            max-height: 75vh;
-            margin-bottom: 10px;
-            border-radius: 14px;
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.20);
             overflow: hidden;
-            background: var(--dash-surface);
-            color: var(--dash-text);
-            box-shadow: var(--dash-shadow);
-            border: 1px solid var(--dash-border);
         }
 
-        #aiPanel.open {
+        .assistant-header {
+            min-height: 65px;
+            padding: 14px 18px;
+            background: var(--primary);
+            color: white;
             display: flex;
-        }
-
-        .ai-header {
-            background: #064b3a;
-            color: #fff;
-            padding: 11px 13px;
-            font-weight: 700;
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            gap: 8px;
+            justify-content: space-between;
+            gap: 12px;
         }
 
-        #aiClose {
-            border: 0;
-            color: #fff;
+        .assistant-header h3 {
+            color: white;
+            font-size: 17px;
+            margin: 0;
+            flex: 1;
+        }
+
+        .assistant-close {
+            width: 35px;
+            height: 35px;
             background: transparent;
-            font-size: 22px;
+            color: white;
+            border: none;
+            font-size: 27px;
             cursor: pointer;
         }
 
-        .ai-language-row {
-            padding: 8px 10px;
-            background: var(--dash-surface-secondary);
-            border-bottom: 1px solid var(--dash-border);
-        }
-
-        #aiLanguageSelect {
-            width: 100%;
-            border: 1px solid var(--dash-border);
-            border-radius: 7px;
-            padding: 8px;
-            background: var(--dash-input);
-            color: var(--dash-text);
-        }
-
-        #aiChatMessages {
-            padding: 12px;
+        .assistant-body {
             flex: 1;
-            overflow-y: auto;
-            background: var(--dash-page);
+            min-height: 0;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 9px;
+            overflow: hidden;
         }
 
-        .ai-message {
-            max-width: 90%;
-            border-radius: 11px;
-            padding: 9px 11px;
-            font-size: 14px;
-            line-height: 1.45;
+        .assistant-language {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 9px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: #ffffff;
+            color: #193b29;
+        }
+
+        .assistant-messages {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            margin-bottom: 14px;
+            padding: 5px;
+        }
+
+        .assistant-message {
+            padding: 11px 14px;
+            margin-bottom: 10px;
+            border-radius: 12px;
             white-space: pre-wrap;
             overflow-wrap: anywhere;
+            line-height: 1.6;
+            font-size: 14px;
         }
 
-        .ai-user-message {
-            align-self: flex-end;
-            background: var(--dash-user-message);
-            color: var(--dash-user-text);
+        .assistant-user-message {
+            background: #e1f2e5;
+            color: #193b29;
+            margin-left: 35px;
         }
 
-        .ai-assistant-message {
-            align-self: flex-start;
-            background: var(--dash-surface);
-            color: var(--dash-text);
-            border: 1px solid var(--dash-border);
+        .assistant-bot-message {
+            background: var(--surface-secondary);
+            color: var(--text);
+            margin-right: 35px;
         }
 
-        #aiStatus {
-            padding: 0 11px 6px;
-            color: var(--dash-muted);
-            font-size: 12px;
-            background: var(--dash-page);
-        }
-
-        #aiChatForm {
-            padding: 10px;
+        .assistant-input-row {
             display: flex;
-            gap: 6px;
-            border-top: 1px solid var(--dash-border);
-            background: var(--dash-surface);
+            align-items: center;
+            gap: 7px;
         }
 
-        #aiChatInput {
-            min-width: 0;
+        .assistant-input-row input {
             flex: 1;
             width: 100%;
-            border: 1px solid var(--dash-border);
-            border-radius: 8px;
+            min-width: 0;
+            height: 45px;
             padding: 10px;
-            background: var(--dash-input);
-            color: var(--dash-text);
+            border: 1px solid var(--border);
+            border-radius: 7px;
         }
 
-        #aiChatInput::placeholder {
-            color: var(--dash-muted);
-        }
-
-        #aiChatForm button {
-            border: 0;
+        .assistant-input-row button {
+            flex-shrink: 0;
+            border: none;
             border-radius: 8px;
-            padding: 9px 11px;
-            color: #fff;
-            background: #17633e;
+            padding: 11px 12px;
+            background: var(--primary);
+            color: white;
             cursor: pointer;
         }
 
-        #aiMicButton {
-            min-width: 42px;
-        }
-
-        #aiMicButton.recording {
-            background: #b42318;
+        .assistant-launcher {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 1499;
+            border: none;
+            border-radius: 50px;
+            padding: 13px 18px;
+            background: var(--primary);
+            color: white;
+            box-shadow: var(--shadow);
+            font-weight: 700;
+            cursor: pointer;
         }
 
         [hidden] {
             display: none !important;
         }
 
-        /* RESPONSIVE */
-
-        @media (max-width: 650px) {
-            .navbar {
-                align-items: flex-start;
-            }
-
-            .nav-links {
-                gap: 12px;
-            }
-
-            #aiAssistant {
-                right: 12px;
-                bottom: 12px;
-            }
-
-            .field-metrics {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .container {
-                width: 94%;
-            }
-
-            .hero,
-            .panel {
-                padding: 16px;
-            }
-
-            .pie-layout {
-                gap: 10px;
+        @media (max-width: 950px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
             }
         }
 
-        @media (prefers-reduced-motion: reduce) {
-            *,
-            *::before,
-            *::after {
-                transition-duration: 0.01ms !important;
+        @media (max-width: 650px) {
+            .header-container {
+                padding: 12px 0;
+            }
+
+            .header-right {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .header-navigation {
+                width: 100%;
+            }
+
+            .nav-link {
+                padding: 8px;
+                font-size: 12px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 16px 12px;
+            }
+
+            .stat-value {
+                font-size: 23px;
+            }
+
+            .dashboard-section {
+                padding: 17px;
+            }
+
+            .page-heading h1 {
+                font-size: 25px;
+            }
+
+            .assistant-widget {
+                right: 10px;
+                bottom: 10px;
+                width: calc(100vw - 20px);
+                height: 75vh;
+                max-height: 75vh;
+            }
+
+            .assistant-launcher {
+                right: 12px;
+                bottom: 12px;
             }
         }
     </style>
@@ -577,262 +636,319 @@
 
 <body>
 
-<div id="leaf-layer" aria-hidden="true"></div>
+    <!-- HEADER -->
 
-<nav class="navbar">
-    <div class="brand">🌱 Smart Weed Detection</div>
+    <header class="main-header">
 
-    <div class="nav-links">
-        <span class="welcome">
-            Welcome, {{ customer['name'] }}
-        </span>
+        <div class="header-container">
 
-        <a href="{{ url_for('home') }}">Home</a>
-        <a href="{{ url_for('dashboard') }}">Dashboard</a>
-        <a href="{{ url_for('history') }}">History</a>
-        <a href="{{ url_for('profile') }}">Profile</a>
-        <a href="{{ url_for('logout') }}">Logout</a>
+            <a href="{{ url_for('home') }}" class="brand">
+                <span class="brand-icon">🌱</span>
+                <span>{{ t('app_name') }}</span>
+            </a>
 
-        <button
-            type="button"
-            class="dashboard-theme-toggle"
-            id="dashboardThemeToggle"
-            aria-label="Change colour theme">
-            🌙 Dark Mode
-        </button>
-    </div>
-</nav>
+            <div class="header-right">
 
-<main class="container">
+                <nav class="header-navigation">
 
-    <section class="hero glass">
-        <h1>Dashboard</h1>
-        <p>
-            Overview of your saved field analyses.
-            Compare weed and good plant coverage across your fields
-            using individual field pie charts.
-        </p>
-    </section>
+                    <a href="{{ url_for('home') }}" class="nav-link">
+                        {{ t('home') }}
+                    </a>
 
-    <!-- OVERALL STATISTICS -->
+                    <a href="{{ url_for('dashboard') }}" class="nav-link">
+                        {{ t('dashboard') }}
+                    </a>
 
-    <section class="stats">
+                    <a href="{{ url_for('history') }}" class="nav-link">
+                        {{ t('history') }}
+                    </a>
 
-        <div class="stat">
-            <h3>Total Analyses</h3>
-            <strong>{{ total_analyses|default(0) }}</strong>
-        </div>
+                    <a href="{{ url_for('profile') }}" class="nav-link">
+                        {{ t('profile') }}
+                    </a>
 
-        <div class="stat">
-            <h3>Average Weed Coverage</h3>
-            <strong>{{ average_weed|default(0) }}%</strong>
-        </div>
+                    <a href="{{ url_for('logout') }}" class="nav-link">
+                        {{ t('logout') }}
+                    </a>
 
-        <div class="stat">
-            <h3>High Priority</h3>
-            <strong>{{ high_count|default(0) }}</strong>
-        </div>
+                </nav>
 
-        <div class="stat">
-            <h3>Medium Priority</h3>
-            <strong>{{ medium_count|default(0) }}</strong>
-        </div>
+                <select
+                    class="language-select"
+                    id="languageSelector"
+                    aria-label="{{ t('select_language') }}">
 
-        <div class="stat">
-            <h3>Low Priority</h3>
-            <strong>{{ low_count|default(0) }}</strong>
-        </div>
+                    {% for code, language in supported_languages.items() %}
+                        <option
+                            value="{{ code }}"
+                            {% if current_language == code %}selected{% endif %}>
+                            {{ language }}
+                        </option>
+                    {% endfor %}
 
-    </section>
+                </select>
 
-    <!-- FIELD-WISE PIE CHARTS -->
+                <button
+                    type="button"
+                    class="theme-toggle"
+                    id="themeToggle">
 
-    <section class="panel field-section">
+                    <span id="themeIcon">🌙</span>
+                    <span id="themeLabel">{{ t('dark_mode') }}</span>
 
-        <h2>Field-wise Comparison</h2>
-
-        <p>
-            Each pie chart compares the average weed coverage
-            with good plant (crop) coverage for one saved field.
-            Red represents weeds and green represents good plants.
-            Soil and background pixels are excluded from this comparison.
-        </p>
-
-        {% if field_analytics %}
-
-        <div class="chart-grid">
-
-            {% for item in field_analytics %}
-
-            <div class="chart-card">
-
-                <h3>🌱 {{ item['field_name'] }}</h3>
-
-                <div class="field-analysis-count">
-                    Total analyses: {{ item['total_analyses']|default(0) }}
-                </div>
-
-                <div class="pie-layout">
-
-                    <div
-                        class="pie-visual"
-                        id="fieldPie{{ loop.index }}"
-                        role="img"
-                        aria-label="Weed and good plant comparison for {{ item['field_name'] }}">
-                    </div>
-
-                    <ul
-                        class="pie-legend"
-                        id="fieldLegend{{ loop.index }}">
-                    </ul>
-
-                </div>
-
-                <div class="chart-note">
-                    Pie chart percentages represent the share of weed and crop pixels only.
-                    These two values add up to 100%.
-                </div>
-
-                <div class="field-metrics">
-
-                    <div class="field-metric">
-                        <span>Weed Coverage</span>
-                        <strong>
-                            {{ '%.2f'|format(item['weed_percentage']|default(0)|float) }}%
-                        </strong>
-                    </div>
-
-                    <div class="field-metric">
-                        <span>Good Plants (Crop)</span>
-                        <strong>
-                            {{ '%.2f'|format(item['crop_percentage']|default(0)|float) }}%
-                        </strong>
-                    </div>
-
-                </div>
-
-                <div class="chart-note">
-                    Coverage values above are percentages of the entire image.
-                    Soil/background is not included in the pie chart.
-                </div>
+                </button>
 
             </div>
 
-            {% endfor %}
-
         </div>
 
-        {% else %}
+    </header>
 
-        <div class="empty-field">
-            No field comparison data available yet.
-            Upload and analyse field images to generate graphs.
-        </div>
+    <!-- DASHBOARD CONTENT -->
 
-        {% endif %}
+    <main class="container">
 
-    </section>
+        <section class="page-heading">
 
-    <!-- INDIVIDUAL FIELD STATISTICS -->
+            <h1>📊 {{ t('dashboard_title') }}</h1>
 
-    <section class="panel field-section">
+            <p>
+                {{ t('dashboard_description') }}
+            </p>
 
-        <h2>Individual Field Analysis</h2>
+        </section>
 
-        <p>
-            Average coverage statistics for each saved field.
-            No prediction images are displayed on this dashboard.
-        </p>
+        <!-- SUMMARY CARDS -->
 
-        {% if field_analytics %}
+        <section class="stats-grid">
 
-        <div class="field-grid">
+            <div class="stat-card">
+                <h3>{{ t('total_analyses') }}</h3>
+                <div class="stat-value">
+                    {{ total_analyses|default(0) }}
+                </div>
+            </div>
 
-            {% for item in field_analytics %}
+            <div class="stat-card">
+                <h3>{{ t('average_weed') }}</h3>
+                <div class="stat-value">
+                    {{ "%.2f"|format(average_weed|default(0)|float) }}%
+                </div>
+            </div>
 
-            <article class="field-card">
+            <div class="stat-card high">
+                <h3>{{ t('high_priority') }}</h3>
+                <div class="stat-value">
+                    {{ high_count|default(0) }}
+                </div>
+            </div>
 
-                <h3>🌱 {{ item['field_name'] or 'Unassigned Field' }}</h3>
+            <div class="stat-card medium">
+                <h3>{{ t('medium_priority') }}</h3>
+                <div class="stat-value">
+                    {{ medium_count|default(0) }}
+                </div>
+            </div>
+
+            <div class="stat-card low">
+                <h3>{{ t('low_priority') }}</h3>
+                <div class="stat-value">
+                    {{ low_count|default(0) }}
+                </div>
+            </div>
+
+        </section>
+
+        <!-- FIELD-WISE COMPARISON -->
+
+        <section class="dashboard-section">
+
+            <div class="section-heading">
+
+                <h2>{{ t('field_comparison') }}</h2>
 
                 <p>
-                    <strong>Total analyses:</strong>
-                    {{ item['total_analyses']|default(0) }}
+                    {{ t('field_comparison_description') }}
                 </p>
 
-                <div class="field-metrics">
+            </div>
 
-                    <div class="field-metric">
-                        <span>Average Weed</span>
-                        <strong>
-                            {{ '%.2f'|format(item['weed_percentage']|default(0)|float) }}%
-                        </strong>
-                    </div>
+            {% if field_analytics %}
 
-                    <div class="field-metric">
-                        <span>Average Good Plants</span>
-                        <strong>
-                            {{ '%.2f'|format(item['crop_percentage']|default(0)|float) }}%
-                        </strong>
-                    </div>
+                <div class="field-grid">
+
+                    {% for field in field_analytics %}
+
+                        <div class="field-card">
+
+                            <h3>
+                                {{ field['field_name']|default(t('unassigned_field')) }}
+                            </h3>
+
+                            <p>
+                                {{ t('total_analyses') }}:
+                                {{ field['total_analyses']|default(0) }}
+                            </p>
+
+                            <div class="chart-wrapper">
+
+                                <canvas
+                                    id="fieldChart{{ loop.index }}"
+                                    data-weed="{{ field['weed_percentage']|default(0)|float }}"
+                                    data-crop="{{ field['crop_percentage']|default(0)|float }}"
+                                    role="img"
+                                    aria-label="{{ t('field_chart_label') }}">
+                                </canvas>
+
+                            </div>
+
+                            <div class="chart-legend">
+
+                                <span class="legend-item">
+                                    <span class="legend-color weed-color"></span>
+                                    {{ t('weed') }}
+                                </span>
+
+                                <span class="legend-item">
+                                    <span class="legend-color crop-color"></span>
+                                    {{ t('good_plants') }}
+                                </span>
+
+                            </div>
+
+                            <p class="chart-note">
+                                {{ t('field_chart_note') }}
+                            </p>
+
+                        </div>
+
+                    {% endfor %}
 
                 </div>
 
-            </article>
+            {% else %}
 
-            {% endfor %}
+                <div class="empty-state">
+                    {{ t('no_field_comparison') }}
+                </div>
 
-        </div>
+            {% endif %}
 
-        {% else %}
+        </section>
 
-        <div class="empty-field">
-            No field analyses have been saved yet.
-            Analyse a field image to view field-wise coverage statistics here.
-        </div>
+        <!-- INDIVIDUAL FIELD ANALYSIS -->
 
-        {% endif %}
+        <section class="dashboard-section">
 
-    </section>
+            <div class="section-heading">
 
-</main>
+                <h2>{{ t('individual_field_analysis') }}</h2>
 
-<footer class="footer">
-    Smart Weed Detection System | U-Net
-</footer>
+                <p>
+                    {{ t('individual_field_description') }}
+                </p>
 
-<!-- AI FARMING ASSISTANT -->
+            </div>
 
-<div id="aiAssistant">
+            {% if field_analytics %}
 
-    <div
-        id="aiPanel"
-        aria-label="AI agricultural assistant"
-        aria-hidden="true">
+                <div class="field-stat-list">
 
-        <div class="ai-header">
-            <span>🌱 AI Farming Assistant</span>
+                    {% for field in field_analytics %}
+
+                        <div class="field-stat-card">
+
+                            <h3>
+                                {{ field['field_name']|default(t('unassigned_field')) }}
+                            </h3>
+
+                            <div class="field-stat-row">
+
+                                <span>{{ t('total_analyses') }}</span>
+
+                                <strong>
+                                    {{ field['total_analyses']|default(0) }}
+                                </strong>
+
+                            </div>
+
+                            <div class="field-stat-row">
+
+                                <span>{{ t('average_weed') }}</span>
+
+                                <strong>
+                                    {{ "%.2f"|format(field['weed_percentage']|default(0)|float) }}%
+                                </strong>
+
+                            </div>
+
+                            <div class="field-stat-row">
+
+                                <span>{{ t('average_good_plants') }}</span>
+
+                                <strong>
+                                    {{ "%.2f"|format(field['crop_percentage']|default(0)|float) }}%
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-state">
+                    {{ t('no_field_analyses') }}
+                </div>
+
+            {% endif %}
+
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+
+    <footer class="main-footer">
+        {{ t('app_name') }} | U-Net
+    </footer>
+        <!-- AI ASSISTANT -->
+
+    <button
+        type="button"
+        class="assistant-launcher"
+        id="assistantLauncher"
+        aria-label="{{ t('open_assistant') }}">
+        💬 {{ t('assistant') }}
+    </button>
+
+    <div class="assistant-widget" id="assistantWidget" hidden>
+
+        <div class="assistant-header">
+
+            <h3>🌱 {{ t('assistant_title') }}</h3>
 
             <button
-                id="aiClose"
                 type="button"
-                aria-label="Close assistant">
+                class="assistant-close"
+                id="assistantClose"
+                aria-label="{{ t('close_assistant') }}">
                 ×
             </button>
+
         </div>
 
-        <div class="ai-language-row">
-
-            <label
-                for="aiLanguageSelect"
-                style="display:inline;margin:0 0 5px;font-size:12px">
-                Assistant language
-            </label>
+        <div class="assistant-body">
 
             <select
-                id="aiLanguageSelect"
-                aria-label="Assistant language">
+                class="assistant-language"
+                id="assistantLanguage"
+                aria-label="{{ t('assistant_language') }}">
 
-                <option value="auto" selected>Auto detect</option>
+                <option value="auto">{{ t('auto_detect') }}</option>
                 <option value="en">English</option>
                 <option value="te">తెలుగు</option>
                 <option value="ta">தமிழ்</option>
@@ -842,247 +958,296 @@
 
             </select>
 
-        </div>
-
-        <div id="aiChatMessages" aria-live="polite" role="list">
-
             <div
-                class="ai-message ai-assistant-message"
-                role="listitem">
-                Hello! Ask a question about weeds, field images,
-                or crop-safe weed management.
+                class="assistant-messages"
+                id="assistantMessages"
+                aria-live="polite"
+                aria-label="{{ t('assistant_conversation') }}">
+
+                <div class="assistant-message assistant-bot-message">
+                    {{ t('dashboard_assistant_welcome') }}
+                </div>
+
+            </div>
+
+            <div class="assistant-input-row">
+
+                <input
+                    type="text"
+                    id="assistantInput"
+                    placeholder="{{ t('assistant_placeholder') }}"
+                    autocomplete="off"
+                    maxlength="2000">
+
+                <button
+                    type="button"
+                    id="assistantMic"
+                    title="{{ t('assistant_voice') }}"
+                    aria-label="{{ t('assistant_voice') }}">
+                    🎤
+                </button>
+
+                <button
+                    type="button"
+                    id="assistantSend"
+                    aria-label="{{ t('send_question') }}">
+                    ➤
+                </button>
+
             </div>
 
         </div>
 
-        <div id="aiStatus" aria-live="polite">
-            Ready
-        </div>
-
-        <form id="aiChatForm">
-
-            <input
-                id="aiChatInput"
-                type="text"
-                placeholder="Ask a question…"
-                autocomplete="off"
-                aria-label="Ask the AI assistant"
-                required>
-
-            <button
-                id="aiMicButton"
-                type="button"
-                title="Start or stop speaking"
-                aria-label="Start voice recording">
-                🎙️
-            </button>
-
-            <button
-                type="submit"
-                aria-label="Send question">
-                ➤
-            </button>
-
-        </form>
-
     </div>
 
-    <button
-        id="aiToggle"
-        type="button"
-        aria-expanded="false"
-        aria-label="Open AI assistant"
-        title="AI assistant">
-        💬
-    </button>
+    <!-- TRANSLATED JAVASCRIPT -->
 
-</div>
+    <script>
+        const DASH_TRANSLATIONS = {
+            darkMode: {{ t('dark_mode')|tojson }},
+            lightMode: {{ t('light_mode')|tojson }},
+            noData: {{ t('no_chart_data')|tojson }},
+            weed: {{ t('weed')|tojson }},
+            crop: {{ t('good_plants')|tojson }}
+        };
+    </script>
 
-<script>
-/* THEME SWITCH */
+    <!-- DASHBOARD CHARTS AND COMMON CONTROLS -->
 
-(function () {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
 
-    const themeButton = document.getElementById("dashboardThemeToggle");
+            // LANGUAGE SELECTOR
 
-    function applyTheme(theme) {
+            const languageSelector =
+                document.getElementById("languageSelector");
 
-        document.documentElement.setAttribute("data-theme", theme);
+            if (languageSelector) {
 
-        try {
-            localStorage.setItem("weed-theme", theme);
-        } catch (error) {
-            console.warn("Could not save theme preference.");
-        }
+                languageSelector.addEventListener("change", function () {
 
-        if (themeButton) {
-            themeButton.textContent =
-                theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode";
-        }
-    }
+                    const selectedLanguage = this.value;
 
-    let currentTheme = "light";
+                    const currentPage =
+                        window.location.pathname + window.location.search;
 
-    try {
-        currentTheme = localStorage.getItem("weed-theme") || "light";
-    } catch (error) {
-        currentTheme = "light";
-    }
+                    const languageUrl =
+                        "{{ url_for('set_language', language='__LANG__') }}";
 
-    applyTheme(currentTheme);
+                    window.location.href =
+                        languageUrl.replace(
+                            "__LANG__",
+                            encodeURIComponent(selectedLanguage)
+                        ) +
+                        "?next=" + encodeURIComponent(currentPage);
 
-    if (themeButton) {
-        themeButton.addEventListener("click", function () {
-            const current =
-                document.documentElement.getAttribute("data-theme");
+                });
 
-            applyTheme(current === "dark" ? "light" : "dark");
-        });
-    }
-
-})();
-
-
-/* FIELD-WISE WEED VS GOOD PLANT PIE CHARTS */
-
-(function () {
-
-    const fieldData = [
-        {% for item in field_analytics|default([]) %}
-        {
-            name: {{ item['field_name']|default('Field')|tojson }},
-            weed: {{ item['weed_percentage']|default(0)|float }},
-            crop: {{ item['crop_percentage']|default(0)|float }}
-        }{% if not loop.last %},{% endif %}
-        {% endfor %}
-    ];
-
-    function drawFieldPie(index, weedValue, cropValue) {
-
-        const chart = document.getElementById("fieldPie" + index);
-        const legend = document.getElementById("fieldLegend" + index);
-
-        if (!chart || !legend) return;
-
-        const weed = Math.max(0, Number(weedValue) || 0);
-        const crop = Math.max(0, Number(cropValue) || 0);
-        const total = weed + crop;
-
-        if (total <= 0) {
-            chart.style.background =
-                "var(--dash-surface-secondary)";
-
-            legend.replaceChildren();
-
-            const li = document.createElement("li");
-            li.textContent = "No weed or crop pixels recorded.";
-            legend.appendChild(li);
-
-            return;
-        }
-
-        // Normalize weed and crop shares to a combined 100%.
-        const weedShare = (weed / total) * 100;
-        const cropShare = (crop / total) * 100;
-        const weedAngle = (weedShare / 100) * 360;
-
-        chart.style.background =
-            `conic-gradient(
-                var(--dash-weed) 0deg ${weedAngle}deg,
-                var(--dash-crop) ${weedAngle}deg 360deg
-            )`;
-
-        legend.replaceChildren();
-
-        [
-            {
-                name: "Weed",
-                value: weedShare,
-                color: "var(--dash-weed)"
-            },
-            {
-                name: "Good Plants (Crop)",
-                value: cropShare,
-                color: "var(--dash-crop)"
             }
-        ].forEach(function (entry) {
 
-            const li = document.createElement("li");
-            const dot = document.createElement("span");
-            const label = document.createElement("span");
+            // THEME SWITCH
 
-            dot.className = "legend-dot";
-            dot.style.background = entry.color;
+            const themeToggle =
+                document.getElementById("themeToggle");
 
-            label.textContent =
-                entry.name + ": " + entry.value.toFixed(2) + "%";
+            const themeIcon =
+                document.getElementById("themeIcon");
 
-            li.append(dot, label);
-            legend.appendChild(li);
+            const themeLabel =
+                document.getElementById("themeLabel");
+
+            function applyTheme(theme) {
+
+                document.documentElement.setAttribute(
+                    "data-theme",
+                    theme
+                );
+
+                try {
+                    localStorage.setItem("weed-theme", theme);
+                } catch (error) {
+                    console.warn("Could not save theme preference.");
+                }
+
+                if (theme === "dark") {
+
+                    themeIcon.textContent = "☀️";
+                    themeLabel.textContent = DASH_TRANSLATIONS.lightMode;
+
+                } else {
+
+                    themeIcon.textContent = "🌙";
+                    themeLabel.textContent = DASH_TRANSLATIONS.darkMode;
+
+                }
+
+            }
+
+            let currentTheme = "light";
+
+            try {
+                currentTheme =
+                    localStorage.getItem("weed-theme") || "light";
+            } catch (error) {
+                currentTheme = "light";
+            }
+
+            applyTheme(currentTheme);
+
+            if (themeToggle) {
+
+                themeToggle.addEventListener("click", function () {
+
+                    const current =
+                        document.documentElement.getAttribute("data-theme");
+
+                    applyTheme(
+                        current === "dark" ? "light" : "dark"
+                    );
+
+                });
+
+            }
+
+            // FIELD CHARTS
+            // Read values from each canvas. This avoids serializing SQLite Row
+            // objects with Jinja's tojson filter (which is not supported).
+
+            const chartCanvases = document.querySelectorAll(
+                "canvas[id^='fieldChart']"
+            );
+
+            const weedColor = getComputedStyle(
+                document.documentElement
+            ).getPropertyValue("--weed-color").trim() || "#e74c3c";
+
+            const cropColor = getComputedStyle(
+                document.documentElement
+            ).getPropertyValue("--crop-color").trim() || "#27ae60";
+
+            chartCanvases.forEach(function (canvas) {
+
+                const weedValue = Number(canvas.dataset.weed || 0);
+                const cropValue = Number(canvas.dataset.crop || 0);
+
+                if (!Number.isFinite(weedValue) || !Number.isFinite(cropValue)) {
+
+                    canvas.replaceWith(
+                        document.createTextNode(DASH_TRANSLATIONS.noData)
+                    );
+
+                    return;
+                }
+
+                const total =
+                    Math.max(0, weedValue) + Math.max(0, cropValue);
+
+                if (total <= 0) {
+
+                    const message = document.createElement("p");
+
+                    message.textContent = DASH_TRANSLATIONS.noData;
+                    message.style.textAlign = "center";
+                    message.style.color = "var(--muted)";
+
+                    canvas.parentElement.replaceChild(message, canvas);
+
+                    return;
+                }
+
+                // Normalize the two visible classes so each pie chart totals 100%.
+
+                const normalizedWeed =
+                    (Math.max(0, weedValue) / total) * 100;
+
+                const normalizedCrop =
+                    (Math.max(0, cropValue) / total) * 100;
+
+                if (typeof Chart === "undefined") {
+
+                    const message = document.createElement("p");
+
+                    message.textContent = DASH_TRANSLATIONS.noData;
+                    message.style.textAlign = "center";
+                    message.style.color = "var(--muted)";
+
+                    canvas.parentElement.replaceChild(message, canvas);
+
+                    return;
+                }
+
+                new Chart(canvas, {
+
+                    type: "pie",
+
+                    data: {
+
+                        labels: [
+                            DASH_TRANSLATIONS.weed,
+                            DASH_TRANSLATIONS.crop
+                        ],
+
+                        datasets: [{
+
+                            data: [
+                                normalizedWeed,
+                                normalizedCrop
+                            ],
+
+                            backgroundColor: [
+                                weedColor,
+                                cropColor
+                            ],
+
+                            borderWidth: 2,
+                            borderColor: "rgba(255,255,255,0.85)"
+
+                        }]
+
+                    },
+
+                    options: {
+
+                        responsive: true,
+                        maintainAspectRatio: false,
+
+                        plugins: {
+
+                            legend: {
+                                display: false
+                            },
+
+                            tooltip: {
+
+                                callbacks: {
+
+                                    label: function (context) {
+
+                                        return context.label + ": " +
+                                            Number(context.raw).toFixed(2) + "%";
+
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                });
+
+            });
 
         });
+    </script>
 
-    }
+    <!-- EXISTING PROJECT SCRIPTS -->
 
-    fieldData.forEach(function (field, index) {
-        drawFieldPie(index + 1, field.weed, field.crop);
-    });
-
-})();
-
-
-/* AI ASSISTANT OPEN AND CLOSE */
-
-(function () {
-
-    const panel = document.getElementById("aiPanel");
-    const toggle = document.getElementById("aiToggle");
-    const close = document.getElementById("aiClose");
-
-    if (!panel || !toggle || !close) {
-        return;
-    }
-
-    function setOpen(open) {
-
-        panel.classList.toggle("open", open);
-
-        panel.setAttribute(
-            "aria-hidden",
-            String(!open)
-        );
-
-        toggle.setAttribute(
-            "aria-expanded",
-            String(open)
-        );
-
-        toggle.style.display =
-            open ? "none" : "inline-block";
-
-    }
-
-    toggle.addEventListener("click", function () {
-        setOpen(true);
-    });
-
-    close.addEventListener("click", function () {
-        setOpen(false);
-    });
-
-})();
-
-</script>
-
-<script
-    src="{{ url_for('static', filename='js/voice.js') }}"
-    defer>
-</script>
-
-<script
-    src="{{ url_for('static', filename='js/leaf-animation.js') }}"
-    defer>
-</script>
+    <script src="{{ url_for('static', filename='js/language.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/voice.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/assistant.js') }}"></script>
 
 </body>
 </html>
