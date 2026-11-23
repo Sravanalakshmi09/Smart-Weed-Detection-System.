@@ -1,5 +1,4 @@
-
-Flask
+﻿Flask
 Werkzeug
 python-dotenv
 numpy
@@ -9,4 +8,5 @@ tensorflow==2.21.0
 torch
 transformers
 faster-whisper
-gunicornai-edge-litert
+gunicorn
+ai-edge-litert
