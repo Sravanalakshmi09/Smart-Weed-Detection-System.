@@ -1,1765 +1,1210 @@
 
-{% extends "base.html" %}
-
-{% block title %}Smart Weed Detection | Home{% endblock %}
-
-{% block extra_css %}
-<style>
-/* =====================================
-   THEME VARIABLES
-===================================== */
-
-html[data-theme="light"] {
-    --home-text: #233c2a;
-    --home-muted: #536b59;
-    --home-card: rgba(255,255,255,.93);
-    --home-card-border: #d5e5d5;
-    --home-inner: rgba(229,244,231,.75);
-    --home-upload: rgba(232,244,232,.75);
-    --home-button: #258447;
-    --home-button-text: #ffffff;
-    --home-button-hover: #176b36;
-    --home-link-bg: #e5f4e7;
-    --home-link-text: #124729;
-    --home-error: #a5232d;
-    --home-error-bg: #fde8e8;
-    --home-image-bg: #e9f0e9;
-}
-
-html[data-theme="dark"] {
-    --home-text: #ffffff;
-    --home-muted: #e2eee3;
-    --home-card: rgba(5,20,11,.88);
-    --home-card-border: rgba(255,255,255,.25);
-    --home-inner: rgba(255,255,255,.10);
-    --home-upload: rgba(255,255,255,.08);
-    --home-button: #ffffff;
-    --home-button-text: #000000;
-    --home-button-hover: #e5e5e5;
-    --home-link-bg: rgba(255,255,255,.12);
-    --home-link-text: #ffffff;
-    --home-error: #ffffff;
-    --home-error-bg: rgba(100,0,0,.85);
-    --home-image-bg: rgba(255,255,255,.10);
-}
-
-/* =====================================
-   GENERAL
-===================================== */
-
-html, body {
-    min-height: 100%;
-}
-
-body {
-    background: transparent !important;
-}
-
-.main-content {
-    min-height: 75vh;
-    background: transparent !important;
-}
-
-.home-container {
-    max-width: 1250px;
-    margin: 35px auto;
-    padding: 0 20px;
-    color: var(--home-text);
-}
-
-/* =====================================
-   HERO
-===================================== */
-
-.hero-section {
-    padding: 48px 30px;
-    text-align: center;
-    border-radius: 18px;
-    background: var(--home-card);
-    border: 1px solid var(--home-card-border);
-    margin-bottom: 30px;
-    box-shadow: 0 8px 25px rgba(0,0,0,.16);
-}
-
-.hero-section h1 {
-    color: var(--home-text);
-    font-size: clamp(27px,4vw,40px);
-    margin: 0 0 12px;
-    font-weight: 600;
-}
-
-.hero-section p {
-    color: var(--home-muted);
-    max-width: 760px;
-    margin: auto;
-    line-height: 1.8;
-    font-size: 15px;
-}
-
-/* =====================================
-   CARDS
-===================================== */
-
-.upload-card,
-.metric-card,
-.result-image-card,
-.details-card {
-    background: var(--home-card);
-    border: 1px solid var(--home-card-border);
-    box-shadow: 0 5px 22px rgba(0,0,0,.15);
-    color: var(--home-text);
-}
-
-.upload-card {
-    border-radius: 18px;
-    padding: 30px;
-    margin-bottom: 30px;
-}
-
-.section-heading {
-    color: var(--home-text);
-    font-size: 23px;
-    margin: 0 0 10px;
-    font-weight: 600;
-}
-
-.section-description {
-    color: var(--home-muted);
-    margin-bottom: 22px;
-    line-height: 1.7;
-}
-
-/* =====================================
-   FIELD SELECTION
-===================================== */
-
-.field-selection {
-    margin-bottom: 22px;
-}
-
-.field-selection label {
-    display: block;
-    color: var(--home-text);
-    margin-bottom: 9px;
-    font-weight: 600;
-}
-
-.field-selection select,
-.field-selection input {
-    width: 100%;
-    padding: 13px;
-    border-radius: 9px;
-    border: 1px solid var(--home-card-border);
-    background: var(--home-card);
-    color: var(--home-text);
-    font-size: 14px;
-    outline: none;
-}
-
-.field-selection select:focus,
-.field-selection input:focus {
-    border-color: #258447;
-    box-shadow: 0 0 0 2px rgba(37,132,71,.15);
-}
-
-.field-selection option {
-    background: var(--home-card);
-    color: var(--home-text);
-}
-
-/* =====================================
-   IMAGE UPLOAD
-===================================== */
-
-.upload-area {
-    display: block;
-    border: 2px dashed var(--home-muted);
-    border-radius: 15px;
-    padding: 38px 20px;
-    text-align: center;
-    background: var(--home-upload);
-    cursor: pointer;
-    transition: .25s;
-}
-
-.upload-area:hover {
-    border-color: #258447;
-    transform: translateY(-2px);
-}
-
-.upload-icon {
-    font-size: 45px;
-    color: var(--home-text);
-    margin-bottom: 12px;
-}
-
-.upload-area h3 {
-    color: var(--home-text);
-    margin: 5px 0;
-    font-weight: 600;
-}
-
-.upload-area p {
-    color: var(--home-muted);
-    font-size: 13px;
-}
-
-#imageInput {
-    display: none;
-}
-
-#imagePreview {
-    display: none;
-    max-width: 100%;
-    max-height: 300px;
-    margin: 20px auto 0;
-    border-radius: 12px;
-    object-fit: contain;
-    box-shadow: 0 3px 12px rgba(0,0,0,.2);
-}
-
-.selected-file {
-    color: var(--home-text);
-    font-size: 13px;
-    margin-top: 12px;
-    overflow-wrap: anywhere;
-}
-
-.upload-error {
-    display: none;
-    margin-top: 12px;
-    padding: 11px;
-    border-radius: 8px;
-    background: var(--home-error-bg);
-    color: var(--home-error);
-    font-size: 13px;
-    text-align: center;
-}
-
-/* =====================================
-   ANALYZE BUTTON
-===================================== */
-
-.analyze-button {
-    display: block;
-    width: 100%;
-    max-width: 350px;
-    margin: 22px auto 0;
-    padding: 15px 22px;
-    background: var(--home-button);
-    color: var(--home-button-text);
-    border: none;
-    border-radius: 11px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: .25s;
-}
-
-.analyze-button:hover {
-    background: var(--home-button-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,.2);
-}
-
-.analyze-button:disabled {
-    opacity: .6;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.analyze-button i {
-    color: var(--home-button-text);
-}
-
-/* =====================================
-   GUEST COUNTER
-===================================== */
-
-.guest-counter {
-    margin-top: 20px;
-    padding: 14px;
-    text-align: center;
-    background: var(--home-inner);
-    color: var(--home-text);
-    border: 1px solid var(--home-card-border);
-    border-radius: 10px;
-    font-size: 14px;
-}
-
-.guest-counter strong {
-    color: var(--home-text);
-}
-
-.guest-warning {
-    border-color: #d99b35;
-}
-
-.login-note {
-    margin-top: 14px;
-    text-align: center;
-    color: var(--home-muted);
-    font-size: 13px;
-}
-
-.login-note a {
-    color: var(--home-text);
-    font-weight: bold;
-    text-decoration: underline;
-}
-
-.no-predictions {
-    padding: 18px;
-    text-align: center;
-    background: var(--home-inner);
-    border: 1px solid var(--home-card-border);
-    border-radius: 10px;
-    color: var(--home-text);
-}
-
-.no-predictions p {
-    margin: 8px 0;
-}
-
-.no-predictions a {
-    color: var(--home-text);
-    font-weight: bold;
-}
-
-/* =====================================
-   RESULTS
-===================================== */
-
-.results-section {
-    margin-top: 35px;
-    scroll-margin-top: 25px;
-}
-
-.results-title {
-    color: var(--home-text);
-    font-size: 27px;
-    margin-bottom: 8px;
-    font-weight: 600;
-}
-
-.results-subtitle {
-    color: var(--home-muted);
-    margin: 0 0 20px;
-    line-height: 1.6;
-}
-
-/* =====================================
-   METRICS
-===================================== */
-
-.metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(3,1fr);
-    gap: 15px;
-    margin-bottom: 25px;
-}
-
-.metric-card {
-    border-radius: 14px;
-    padding: 22px 12px;
-    text-align: center;
-}
-
-.metric-card small {
-    color: var(--home-muted);
-    display: block;
-    margin-bottom: 10px;
-}
-
-.metric-card strong {
-    font-size: 25px;
-    color: var(--home-text);
-    overflow-wrap: anywhere;
-    font-weight: 600;
-}
-
-.metric-card.severity strong {
-    font-size: 20px;
-}
-
-/* =====================================
-   RESULT IMAGES
-===================================== */
-
-.result-images {
-    display: grid;
-    grid-template-columns: repeat(3,1fr);
-    gap: 18px;
-    margin: 25px 0;
-}
-
-.result-image-card {
-    border-radius: 15px;
-    padding: 15px;
-    overflow: hidden;
-}
-
-.result-image-card h3 {
-    color: var(--home-text);
-    font-size: 16px;
-    margin: 0 0 13px;
-    font-weight: 600;
-}
-
-.result-image-card img {
-    display: block;
-    width: 100%;
-    height: 250px;
-    object-fit: contain;
-    background: var(--home-image-bg);
-    border-radius: 10px;
-}
-
-.image-unavailable {
-    display: flex;
-    min-height: 180px;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: var(--home-text);
-    background: var(--home-image-bg);
-    border-radius: 10px;
-    padding: 15px;
-}
-
-/* =====================================
-   DETECTION DETAILS
-===================================== */
-
-.details-card {
-    border-radius: 15px;
-    padding: 22px;
-    margin-bottom: 20px;
-}
-
-.details-card h3 {
-    color: var(--home-text);
-    margin-top: 0;
-    margin-bottom: 17px;
-    font-weight: 600;
-}
-
-.details-grid {
-    display: grid;
-    grid-template-columns: repeat(2,1fr);
-    gap: 13px;
-}
-
-.detail-item {
-    padding: 14px;
-    background: var(--home-inner);
-    border-radius: 9px;
-    color: var(--home-text);
-    overflow-wrap: anywhere;
-}
-
-.detail-item strong {
-    display: block;
-    color: var(--home-text);
-    margin-bottom: 5px;
-}
-
-/* =====================================
-   CLASS DISTRIBUTION
-===================================== */
-
-.class-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.class-list li {
-    padding: 12px 0;
-    border-bottom: 1px solid var(--home-card-border);
-    display: flex;
-    justify-content: space-between;
-    gap: 15px;
-    color: var(--home-text);
-}
-
-.class-list li:last-child {
-    border-bottom: none;
-}
-
-.class-value {
-    color: var(--home-text);
-    font-weight: bold;
-}
-
-/* =====================================
-   RECOMMENDATIONS
-===================================== */
-
-.recommendation {
-    padding: 20px;
-    border-radius: 12px;
-    background: var(--home-inner);
-    border: 1px solid var(--home-card-border);
-    color: var(--home-text);
-    line-height: 1.75;
-}
-
-.recommendation h4 {
-    color: var(--home-text);
-    margin: 0 0 10px;
-    font-size: 17px;
-    font-weight: 600;
-}
-
-.recommendation p {
-    margin: 8px 0;
-    color: var(--home-text);
-}
-
-.recommendation ul {
-    padding-left: 22px;
-    margin: 10px 0;
-}
-
-.recommendation li {
-    color: var(--home-text);
-    margin-bottom: 7px;
-}
-
-.recommendation-note {
-    margin-top: 15px;
-    padding: 12px;
-    border-radius: 8px;
-    background: var(--home-inner);
-    border: 1px solid var(--home-card-border);
-    color: var(--home-muted);
-    font-size: 13px;
-    line-height: 1.6;
-}
-
-/* =====================================
-   RESULT LINKS
-===================================== */
-
-.result-links {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin: 25px 0;
-}
-
-.result-links a {
-    padding: 13px 19px;
-    border-radius: 9px;
-    background: var(--home-link-bg);
-    border: 1px solid var(--home-card-border);
-    color: var(--home-link-text);
-    font-weight: 600;
-    text-decoration: none;
-}
-
-.result-links a:hover {
-    filter: brightness(.94);
-    text-decoration: underline;
-}
-
-/* =====================================
-   RESPONSIVE
-===================================== */
-
-@media(max-width:850px) {
-    .metrics-grid {
-        grid-template-columns: repeat(2,1fr);
-    }
-
-    .result-images {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .result-image-card:last-child {
-        grid-column: 1/-1;
-    }
-}
-
-@media(max-width:550px) {
-    .home-container {
-        padding: 0 12px;
-        margin-top: 20px;
-    }
-
-    .hero-section {
-        padding: 30px 17px;
-    }
-
-    .upload-card {
-        padding: 18px;
-    }
-
-    .result-images {
-        grid-template-columns: 1fr;
-    }
-
-    .result-image-card:last-child {
-        grid-column: auto;
-    }
-
-    .details-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .metric-card strong {
-        font-size: 21px;
-    }
-
-    .result-links {
-        flex-direction: column;
-        align-items: stretch;
-        text-align: center;
-    }
-}
-</style>
-{% endblock %}
-
-
-{% block content %}
-
-<div class="home-container">
-
-    <!-- HERO SECTION -->
-
-    <section class="hero-section">
-
-        <h1>🌱 Smart Weed Detection System</h1>
-
-        <p>
-            Identify and analyze weeds in agricultural fields using
-            deep learning and U-Net image segmentation. Upload a field
-            image to identify crop and weed regions, estimate weed
-            coverage, and receive suitable management recommendations.
-        </p>
-
+<!DOCTYPE html>
+<html lang="{{ current_language|default('en') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t('app_name') }}</title>
+
+    <style>
+        :root {
+            --green: #23834b;
+            --dark-green: #14532d;
+            --light-green: #eaf7ed;
+            --background: #f4f8f3;
+            --text: #203329;
+            --muted: #718078;
+            --border: #dce8dc;
+            --white: #ffffff;
+            --shadow: 0 8px 28px rgba(26, 68, 39, 0.09);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background: var(--background);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background:
+                linear-gradient(rgba(244,248,243,.90), rgba(244,248,243,.94)),
+                url("/statics/field-background.png") center/cover fixed;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button, input, select {
+            font: inherit;
+        }
+
+        .navbar {
+            width: 100%;
+            background: rgba(255,255,255,.97);
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 3px 14px rgba(0,0,0,.04);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-inner {
+            max-width: 1250px;
+            margin: auto;
+            min-height: 72px;
+            padding: 12px 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 19px;
+            font-weight: 800;
+            color: var(--dark-green);
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            background: var(--light-green);
+            border-radius: 13px;
+            font-size: 23px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            padding: 9px 13px;
+            border-radius: 9px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #405449;
+            transition: .2s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            background: var(--light-green);
+            color: var(--dark-green);
+        }
+
+        .language-select {
+            padding: 9px 11px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: white;
+            color: var(--text);
+            outline: none;
+        }
+
+        .container {
+            width: min(1120px, calc(100% - 32px));
+            margin: 32px auto 55px;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 35px 15px 27px;
+        }
+
+        .hero h1 {
+            color: var(--dark-green);
+            font-size: clamp(26px, 4vw, 39px);
+            margin-bottom: 8px;
+        }
+
+        .hero p {
+            color: var(--muted);
+            font-size: 15px;
+        }
+
+        .card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 17px;
+            padding: 25px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .section-heading {
+            font-size: 21px;
+            color: var(--dark-green);
+            margin-bottom: 8px;
+        }
+
+        .section-description {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .guest-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            padding: 15px 18px;
+            margin-bottom: 22px;
+            border-radius: 12px;
+            background: var(--light-green);
+            border: 1px solid #cce8d2;
+        }
+
+        .guest-box strong {
+            color: var(--dark-green);
+        }
+
+        .guest-count {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 19px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .form-control {
+            width: 100%;
+            min-height: 47px;
+            padding: 11px 13px;
+            border: 1px solid #ccd9ce;
+            border-radius: 9px;
+            background: white;
+            color: var(--text);
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px rgba(35,131,75,.10);
+        }
+
+        .help-text {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .upload-area {
+            border: 2px dashed #a8c9ae;
+            background: #f8fcf8;
+            border-radius: 13px;
+            padding: 28px 18px;
+            text-align: center;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        .upload-area:hover {
+            background: #eff9f0;
+            border-color: var(--green);
+        }
+
+        .upload-icon {
+            font-size: 38px;
+            margin-bottom: 8px;
+        }
+
+        .upload-area strong {
+            display: block;
+            color: var(--dark-green);
+            margin-bottom: 5px;
+        }
+
+        .upload-area p {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        #image {
+            display: none;
+        }
+
+        #selected-file {
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--green);
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        .primary-btn {
+            width: 100%;
+            border: none;
+            border-radius: 10px;
+            padding: 14px 18px;
+            background: var(--green);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        .primary-btn:hover {
+            background: var(--dark-green);
+            transform: translateY(-1px);
+        }
+
+        .primary-btn:disabled {
+            opacity: .65;
+            cursor: wait;
+            transform: none;
+        }
+
+        .flash-message {
+            padding: 13px 16px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            border: 1px solid transparent;
+        }
+
+        .flash-danger {
+            background: #fff0ef;
+            border-color: #ffd1cd;
+            color: #a52b22;
+        }
+
+        .flash-warning {
+            background: #fff8e6;
+            border-color: #f4dfa3;
+            color: #805c0b;
+        }
+
+        .flash-success {
+            background: #eaf8ed;
+            border-color: #c8e9cf;
+            color: #246c39;
+        }
+
+        .flash-info {
+            background: #edf5ff;
+            border-color: #cbdff8;
+            color: #245b91;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .result-header h2 {
+            color: var(--dark-green);
+            font-size: 24px;
+        }
+
+        .field-label {
+            display: inline-block;
+            padding: 7px 12px;
+            background: var(--light-green);
+            color: var(--dark-green);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: #f8fbf8;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 17px;
+            text-align: center;
+        }
+
+        .stat-card .stat-value {
+            font-size: 25px;
+            font-weight: 800;
+            color: var(--dark-green);
+            overflow-wrap: anywhere;
+        }
+
+        .stat-card .stat-label {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .stat-card.weed-stat {
+            background: #fff3f1;
+            border-color: #f3d1cb;
+        }
+
+        .stat-card.weed-stat .stat-value {
+            color: #c43c30;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 7px 13px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .priority-low {
+            background: #e4f6e8;
+            color: #24733b;
+        }
+
+        .priority-medium {
+            background: #fff3d7;
+            color: #956400;
+        }
+
+        .priority-high {
+            background: #ffe5e2;
+            color: #b52e25;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 17px;
+            margin-top: 15px;
+        }
+
+        .image-card {
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            background: #fbfdfb;
+        }
+
+        .image-card h3 {
+            padding: 12px;
+            text-align: center;
+            color: var(--dark-green);
+            font-size: 14px;
+        }
+
+        .image-card img {
+            width: 100%;
+            height: 230px;
+            display: block;
+            object-fit: contain;
+            background: #eef2ed;
+        }
+
+        .recommendation-heading {
+            margin-bottom: 18px;
+        }
+
+        .recommendation-heading h2 {
+            color: var(--dark-green);
+            font-size: 23px;
+        }
+
+        .recommendation-heading p {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .recommendation-level {
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            padding: 20px;
+            margin-bottom: 17px;
+            background: #fff;
+        }
+
+        .recommendation-level h3 {
+            font-size: 17px;
+            margin-bottom: 15px;
+        }
+
+        .recommendation-level.low h3 {
+            color: #24733b;
+        }
+
+        .recommendation-level.medium h3 {
+            color: #956400;
+        }
+
+        .recommendation-level.high h3 {
+            color: #b52e25;
+        }
+
+        .method-list {
+            display: grid;
+            gap: 13px;
+        }
+
+        .method {
+            padding: 14px;
+            border-radius: 10px;
+            background: #f8faf8;
+            border: 1px solid #e6eee6;
+        }
+
+        .method h4 {
+            font-size: 14px;
+            color: var(--dark-green);
+            margin-bottom: 5px;
+        }
+
+        .method p {
+            font-size: 13px;
+            color: #56665b;
+        }
+
+        .important-note {
+            padding: 17px;
+            border-radius: 11px;
+            background: #fff8e9;
+            border: 1px solid #f1dfb5;
+            margin-top: 15px;
+        }
+
+        .important-note strong {
+            color: #805c0b;
+        }
+
+        .important-note p {
+            color: #6f5b31;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .workflow-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .workflow-item {
+            padding: 13px;
+            background: #f6faf6;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .workflow-item strong {
+            display: block;
+            color: var(--dark-green);
+            font-size: 13px;
+        }
+
+        .workflow-item span {
+            display: inline-block;
+            margin-top: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 25px 15px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .loading-text {
+            display: none;
+            text-align: center;
+            margin-top: 12px;
+            color: var(--green);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        @media (max-width: 850px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .image-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .image-card img {
+                height: 280px;
+            }
+
+            .workflow-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 550px) {
+            .nav-inner {
+                justify-content: center;
+            }
+
+            .brand {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .nav-links {
+                justify-content: center;
+            }
+
+            .container {
+                width: calc(100% - 20px);
+                margin-top: 18px;
+            }
+
+            .card {
+                padding: 17px;
+            }
+
+            .stats-grid {
+                gap: 9px;
+            }
+
+            .stat-card {
+                padding: 12px 7px;
+            }
+
+            .stat-card .stat-value {
+                font-size: 21px;
+            }
+
+            .workflow-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar">
+    <div class="nav-inner">
+
+        <a href="{{ url_for('home') }}" class="brand">
+            <span class="brand-icon">🌱</span>
+            <span>{{ t('app_name') }}</span>
+        </a>
+
+        <div class="nav-links">
+
+            <a href="{{ url_for('home') }}" class="active">
+                {{ t('home') }}
+            </a>
+
+            {% if customer %}
+                <a href="{{ url_for('dashboard') }}">
+                    {{ t('dashboard') }}
+                </a>
+
+                <a href="{{ url_for('history') }}">
+                    {{ t('history') }}
+                </a>
+
+                <a href="{{ url_for('profile') }}">
+                    {{ t('profile') }}
+                </a>
+
+                <a href="{{ url_for('logout') }}">
+                    {{ t('logout') }}
+                </a>
+            {% else %}
+                <a href="{{ url_for('login') }}">
+                    {{ t('login') }}
+                </a>
+
+                <a href="{{ url_for('register') }}">
+                    {{ t('register') }}
+                </a>
+            {% endif %}
+
+            <select class="language-select"
+                    aria-label="Select language"
+                    onchange="changeLanguage(this.value)">
+
+                {% for code, language in supported_languages.items() %}
+                    <option value="{{ code }}"
+                        {% if current_language == code %}selected{% endif %}>
+                        {{ language }}
+                    </option>
+                {% endfor %}
+
+            </select>
+
+        </div>
+    </div>
+</nav>
+
+
+<main class="container">
+
+    <section class="hero">
+        <h1>{{ t('app_name') }}</h1>
+        <p>{{ t('tagline') }}</p>
     </section>
 
 
-    <!-- IMAGE UPLOAD -->
+    <!-- Flash messages -->
 
-    <section class="upload-card">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+
+    <!-- Upload section -->
+
+    <section class="card">
 
         <h2 class="section-heading">
-            <i class="fas fa-camera"></i>
-            Upload Field Image
+            {{ t('upload_image') }}
         </h2>
 
         <p class="section-description">
-            Select a clear image of an agricultural field or crop.
-            The system will analyze the image and display the prediction.
-            Supported formats: JPG, JPEG, PNG and WEBP.
+            {{ t('upload_instructions') }}
         </p>
 
 
-        {% set guest = not session.get('customer_id') %}
-        {% set used = session.get('free_predictions_used', 0)|int %}
-        {% set remaining = free_predictions_remaining|default(5-used)|int %}
+        {% if is_guest %}
+            <div class="guest-box">
+
+                <div>
+                    <strong>{{ t('guest_limit') }}</strong>
+                    <div class="guest-count">
+                        {{ t('used') }}:
+                        {{ free_predictions_used|default(0) }} / 5
+                    </div>
+                </div>
+
+                <div class="guest-count">
+                    {{ t('remaining') }}:
+                    {{ free_predictions_remaining|default(5) }}
+                </div>
+
+            </div>
+        {% endif %}
 
 
-        {% if guest and remaining <= 0 %}
+        <form method="POST"
+              action="{{ url_for('home') }}"
+              enctype="multipart/form-data"
+              id="prediction-form">
 
-            <div class="no-predictions">
+            <!-- Field selection -->
 
-                <strong>Your five free predictions have been used.</strong>
+            <div class="form-group">
 
-                <p>
-                    Please log in or register to continue using the system.
+                <label for="saved-field">
+                    {{ t('select_field') }}
+                </label>
+
+                <select id="saved-field"
+                        class="form-control">
+
+                    <option value="">
+                        {{ t('existing_field') }}
+                    </option>
+
+                    {% for field in saved_fields|default([]) %}
+                        <option value="{{ field }}"
+                            {% if field_name|default('') == field %}selected{% endif %}>
+                            {{ field }}
+                        </option>
+                    {% endfor %}
+
+                </select>
+
+                <p class="help-text">
+                    {{ t('new_field_prompt') }}
                 </p>
-
-                <a href="{{ url_for('login') }}">Login</a>
-                &nbsp; | &nbsp;
-                <a href="{{ url_for('register') }}">Register</a>
 
             </div>
 
-        {% else %}
 
-            <form method="POST"
-                  action="{{ url_for('home') }}"
-                  enctype="multipart/form-data"
-                  id="uploadForm">
+            <div class="form-group">
 
+                <label for="field-name">
+                    {{ t('field_name') }}
+                </label>
 
-                <!-- FIELD SELECTION -->
+                <input type="text"
+                       id="field-name"
+                       name="field_name"
+                       class="form-control"
+                       maxlength="80"
+                       required
+                       value="{{ field_name|default('') }}"
+                       placeholder="{{ t('field_name_placeholder') }}">
 
-                <div class="field-selection">
+                <p class="help-text">
+                    {{ t('field_name_help') }}
+                </p>
 
-                    {% if not guest %}
-
-                        <!-- REGISTERED USERS -->
-
-                        <label for="field_id">
-                            <i class="fas fa-map-marker-alt"></i>
-                            Select Agricultural Field
-                        </label>
-
-                        <select id="field_id">
-
-                            <option value="">
-                                Select an existing field
-                            </option>
-
-                            {% for field in fields|default([]) %}
-
-                                <option value="{{ field.field_name }}">
-                                    {{ field.field_name }}
-                                </option>
-
-                            {% endfor %}
-
-                        </select>
-
-                        <p style="color:var(--home-muted);
-                                  font-size:13px;margin:10px 0;">
-
-                            Or enter a new field name below.
-
-                        </p>
-
-                        <input type="text"
-                               id="new_field_name"
-                               maxlength="80"
-                               placeholder="Enter new field name">
-
-                        <!--
-                            This hidden input is the actual value
-                            submitted to app.py.
-                        -->
-
-                        <input type="hidden"
-                               name="field_name"
-                               id="field_name"
-                               value="">
-
-                    {% else %}
-
-                        <!-- GUEST USERS -->
-
-                        <label for="field_name">
-                            <i class="fas fa-map-marker-alt"></i>
-                            Agricultural Field Name
-                        </label>
-
-                        <input type="text"
-                               name="field_name"
-                               id="field_name"
-                               maxlength="80"
-                               placeholder="Enter field name (e.g. North Field)"
-                               value="{{ request.form.get('field_name', '') }}"
-                               required>
-
-                    {% endif %}
-
-                    <p style="color:var(--home-muted);
-                              font-size:13px;margin:10px 0;">
-
-                        Enter the same field name for future images
-                        of the same agricultural field to group its
-                        analysis results.
-
-                    </p>
-
-                </div>
+            </div>
 
 
-                <!-- IMAGE INPUT -->
+            <!-- Image upload -->
 
-                <label for="imageInput" class="upload-area">
+            <div class="form-group">
 
-                    <div class="upload-icon">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                    </div>
+                <label>
+                    {{ t('upload_image') }}
+                </label>
 
-                    <h3>Select an Image</h3>
+                <label for="image" class="upload-area">
 
-                    <p>
-                        Click here to browse and select your field image
-                    </p>
+                    <div class="upload-icon">📷</div>
 
-                    <input type="file"
-                           name="image"
-                           id="imageInput"
-                           accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-                           required>
+                    <strong>{{ t('upload_image') }}</strong>
 
-                    <img id="imagePreview"
-                         alt="Selected image preview">
+                    <p>{{ t('supported_formats') }}</p>
 
-                    <div class="selected-file"
-                         id="selectedFile"></div>
+                    <p>Maximum file size: 8 MB</p>
 
-                    <div class="upload-error"
-                         id="uploadError"
-                         role="alert"></div>
+                    <div id="selected-file"></div>
 
                 </label>
 
-
-                <!-- ANALYZE BUTTON -->
-
-                <button type="submit"
-                        class="analyze-button"
-                        id="analyzeButton">
-
-                    <i class="fas fa-leaf"></i>
-                    Analyze Field Image
-
-                </button>
-
-            </form>
-
-        {% endif %}
-
-
-        <!-- GUEST PREDICTION COUNTER -->
-
-        {% if guest %}
-
-            <div class="guest-counter
-                {% if remaining <= 1 %}guest-warning{% endif %}">
-
-                <strong>Free Predictions</strong><br>
-
-                Used: {{ used }} / 5
-
-                &nbsp; | &nbsp;
-
-                Remaining: {{ remaining }}
+                <input type="file"
+                       id="image"
+                       name="image"
+                       accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                       required>
 
             </div>
 
-            <div class="login-note">
 
-                Create an account to access your saved analysis history.
+            <button type="submit"
+                    class="primary-btn"
+                    id="analyze-button">
 
-                <a href="{{ url_for('register') }}">
-                    Register here
-                </a>
+                {{ t('analyze') }}
 
+            </button>
+
+            <div class="loading-text" id="loading-text">
+                {{ t('analyzing') }} Please wait...
             </div>
 
-        {% else %}
-
-            <div class="login-note">
-
-                <i class="fas fa-check-circle"></i>
-
-                Your analyses are saved to your account history.
-
-            </div>
-
-        {% endif %}
+        </form>
 
     </section>
 
 
-    <!-- PREDICTION RESULTS -->
+    <!-- Prediction result -->
 
-    {% if result %}
+    {% if result and result.success %}
 
-    <section class="results-section" id="predictionResults">
+        <section class="card" id="prediction-result">
 
-        <h2 class="results-title">
-            <i class="fas fa-chart-pie"></i>
-            Field Analysis Results
-        </h2>
+            <div class="result-header">
 
-        <p class="results-subtitle">
+                <div>
+                    <h2>{{ t('prediction_result') }}</h2>
 
-            The following information belongs to your latest image analysis.
-            Previous analyses can be viewed from the History page.
-
-        </p>
-
-
-        <!-- METRICS -->
-
-        <div class="metrics-grid">
-
-            <div class="metric-card">
-
-                <small>Weed Coverage</small>
-
-                <strong>
-                    {{ "%.2f"|format(result.weed_percentage|default(0)|float) }}%
-                </strong>
-
-            </div>
-
-
-            <div class="metric-card">
-
-                <small>Crop Coverage</small>
-
-                <strong>
-                    {{ "%.2f"|format(result.crop_percentage|default(0)|float) }}%
-                </strong>
-
-            </div>
-
-
-            <div class="metric-card">
-
-                <small>Soil / Background</small>
-
-                <strong>
-                    {{ "%.2f"|format(result.soil_percentage|default(0)|float) }}%
-                </strong>
-
-            </div>
-
-
-            <div class="metric-card severity">
-
-                <small>Weed Severity</small>
-
-                <strong>
-                    {{ result.severity|default('N/A') }}
-                </strong>
-
-            </div>
-
-
-            <div class="metric-card">
-
-                <small>Confidence</small>
-
-                <strong>
-                    {{ "%.2f"|format(result.confidence|default(0)|float) }}%
-                </strong>
-
-            </div>
-
-
-            <div class="metric-card">
-
-                <small>Weed Pixels</small>
-
-                <strong>
-                    {{ result.weed_pixel_count|default(0) }}
-                </strong>
-
-            </div>
-
-        </div>
-
-
-        <!-- RESULT IMAGES -->
-
-        <div class="result-images">
-
-
-            <!-- ORIGINAL IMAGE -->
-
-            <div class="result-image-card">
-
-                <h3>
-                    <i class="fas fa-image"></i>
-                    Original Image
-                </h3>
-
-                {% if result.source_filename %}
-
-                    <img
-                        src="{{ url_for('static', filename='uploads/' + result.source_filename) }}"
-                        alt="Original uploaded field image"
-                        loading="lazy">
-
-                {% else %}
-
-                    <div class="image-unavailable">
-                        Original image is not available.
-                    </div>
-
-                {% endif %}
-
-            </div>
-
-
-            <!-- OVERLAY -->
-
-            <div class="result-image-card">
-
-                <h3>
-                    <i class="fas fa-layer-group"></i>
-                    Segmentation Overlay
-                </h3>
-
-                {% if result.overlay_filename %}
-
-                    <img
-                        src="{{ url_for('static', filename='uploads/' + result.overlay_filename) }}"
-                        alt="U-Net segmentation overlay"
-                        loading="lazy">
-
-                {% else %}
-
-                    <div class="image-unavailable">
-                        Segmentation overlay is not available.
-                    </div>
-
-                {% endif %}
-
-            </div>
-
-
-            <!-- WEED MASK -->
-
-            <div class="result-image-card">
-
-                <h3>
-                    <i class="fas fa-vector-square"></i>
-                    Weed Mask
-                </h3>
-
-                {% if result.mask_filename %}
-
-                    <img
-                        src="{{ url_for('static', filename='uploads/' + result.mask_filename) }}"
-                        alt="Weed segmentation mask"
-                        loading="lazy">
-
-                {% else %}
-
-                    <div class="image-unavailable">
-                        Weed mask is not available.
-                    </div>
-
-                {% endif %}
-
-            </div>
-
-        </div>
-
-
-        <!-- DETECTION DETAILS -->
-
-        <div class="details-card">
-
-            <h3>
-                <i class="fas fa-info-circle"></i>
-                Detection Details
-            </h3>
-
-            <div class="details-grid">
-
-
-                <div class="detail-item">
-
-                    <strong>Field Name</strong>
-
-                    {{ result.field_name|default('Guest Field') }}
-
+                    <p class="section-description">
+                        {{ result.field_name|default('') }}
+                    </p>
                 </div>
 
-
-                <div class="detail-item">
-
-                    <strong>Weed Location</strong>
-
-                    {{ result.location|default('Not available') }}
-
-                </div>
-
-
-                <div class="detail-item">
-
-                    <strong>Weed Pixel Count</strong>
-
-                    {{ result.weed_pixel_count|default(0) }}
-
-                </div>
-
-
-                <div class="detail-item">
-
-                    <strong>Suppression Status</strong>
-
-                    {{ result.suppression_status|default('Not started') }}
-
-                </div>
-
-
-                <div class="detail-item">
-
-                    <strong>Post-treatment Status</strong>
-
-                    {{ result.post_treatment_status|default('Not performed') }}
-
-                </div>
-
-
-                <div class="detail-item">
-
-                    <strong>Workflow Status</strong>
-
-                    {{ result.workflow_status|default('Analysis completed') }}
-
-                </div>
-
-
-                <div class="detail-item">
-
-                    <strong>Bounding Box</strong>
-
-                    {{ result.bbox|default('Not available') }}
-
-                </div>
-
-
-                <div class="detail-item">
-
-                    <strong>Inference Time</strong>
-
-                    {{ result.inference_time|default('N/A') }}
-
-                    {% if result.inference_time is defined %} seconds{% endif %}
-
-                </div>
+                <span class="field-label">
+                    U-Net Segmentation
+                </span>
 
             </div>
 
-        </div>
 
+            <!-- Statistics -->
 
-        <!-- CLASS DISTRIBUTION -->
+            <div class="stats-grid">
 
-        <div class="details-card">
-
-            <h3>
-                <i class="fas fa-chart-bar"></i>
-                Class Distribution
-            </h3>
-
-            <ul class="class-list">
-
-                <li>
-
-                    <span>Weed</span>
-
-                    <span class="class-value">
+                <div class="stat-card weed-stat">
+                    <div class="stat-value">
                         {{ "%.2f"|format(result.weed_percentage|default(0)|float) }}%
-                    </span>
+                    </div>
+                    <div class="stat-label">
+                        {{ t('weed_coverage') }}
+                    </div>
+                </div>
 
-                </li>
 
-                <li>
-
-                    <span>Crop</span>
-
-                    <span class="class-value">
+                <div class="stat-card">
+                    <div class="stat-value">
                         {{ "%.2f"|format(result.crop_percentage|default(0)|float) }}%
-                    </span>
+                    </div>
+                    <div class="stat-label">
+                        {{ t('crop_coverage') }}
+                    </div>
+                </div>
 
-                </li>
 
-                <li>
-
-                    <span>Background / Soil</span>
-
-                    <span class="class-value">
+                <div class="stat-card">
+                    <div class="stat-value">
                         {{ "%.2f"|format(result.soil_percentage|default(0)|float) }}%
+                    </div>
+                    <div class="stat-label">
+                        {{ t('soil_background') }}
+                    </div>
+                </div>
+
+
+                <div class="stat-card">
+                    <div class="stat-value">
+                        {{ "%.2f"|format(result.confidence|default(0)|float) }}%
+                    </div>
+                    <div class="stat-label">
+                        {{ t('confidence') }}
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- Weed priority -->
+
+            {% set severity = result.weed_severity|default('LOW')|lower %}
+
+            <div style="margin-bottom:20px;">
+
+                <strong>{{ t('weed_severity') }}:</strong>
+
+                {% if severity == 'high' %}
+                    <span class="priority-badge priority-high">
+                        {{ t('high') }}
                     </span>
 
-                </li>
-
-                <li>
-
-                    <strong>Total</strong>
-
-                    <strong class="class-value">
-
-                        {{ "%.2f"|format(
-                            (result.weed_percentage|default(0)|float)
-                            +
-                            (result.crop_percentage|default(0)|float)
-                            +
-                            (result.soil_percentage|default(0)|float)
-                        ) }}%
-
-                    </strong>
-
-                </li>
-
-            </ul>
-
-        </div>
-
-
-        <!-- WEED MANAGEMENT RECOMMENDATION -->
-
-        <div class="details-card">
-
-            <h3>
-                <i class="fas fa-lightbulb"></i>
-                Weed Management Recommendation
-            </h3>
-
-            {% set weed_percent =
-                result.weed_percentage|default(0)|float %}
-
-            <div class="recommendation">
-
-                {% if weed_percent < 5 %}
-
-                    <h4>Low Weed Coverage</h4>
-
-                    <p>
-                        The analysis indicates a low proportion of weed
-                        pixels in the uploaded field image. Most of the
-                        analyzed area is classified as background, soil,
-                        or crop.
-                    </p>
-
-                    <strong>Suggested actions:</strong>
-
-                    <ul>
-
-                        <li>
-                            Continue monitoring the field for newly emerging weeds.
-                        </li>
-
-                        <li>
-                            Inspect isolated detected weed regions to confirm
-                            the prediction.
-                        </li>
-
-                        <li>
-                            Consider localized weed removal or another
-                            suitable targeted control method where necessary.
-                        </li>
-
-                        <li>
-                            Repeat image analysis periodically to observe
-                            changes in weed coverage.
-                        </li>
-
-                    </ul>
-
-                    <p>
-                        <strong>Management priority:</strong>
-                        Routine monitoring and early intervention.
-                    </p>
-
-
-                {% elif weed_percent < 20 %}
-
-                    <h4>Moderate Weed Coverage</h4>
-
-                    <p>
-                        The analysis indicates a moderate proportion of
-                        weed pixels. Some areas may require attention to
-                        reduce competition between weeds and crops for
-                        sunlight, water, nutrients, and growing space.
-                    </p>
-
-                    <strong>Suggested actions:</strong>
-
-                    <ul>
-
-                        <li>
-                            Inspect highlighted weed regions and identify
-                            weed species where possible.
-                        </li>
-
-                        <li>
-                            Prioritize areas with concentrated weed growth.
-                        </li>
-
-                        <li>
-                            Consider targeted weed-control techniques
-                            appropriate for the crop and field.
-                        </li>
-
-                        <li>
-                            Avoid applying treatment directly to crop plants.
-                        </li>
-
-                        <li>
-                            Reassess affected areas through follow-up images.
-                        </li>
-
-                    </ul>
-
-                    <p>
-                        <strong>Management priority:</strong>
-                        Targeted control and continued crop protection.
-                    </p>
-
+                {% elif severity == 'medium' %}
+                    <span class="priority-badge priority-medium">
+                        {{ t('medium') }}
+                    </span>
 
                 {% else %}
-
-                    <h4>High Weed Coverage</h4>
-
-                    <p>
-                        The analysis indicates a relatively high proportion
-                        of weed pixels in the uploaded image. The affected
-                        regions should be inspected to confirm the extent
-                        of infestation.
-                    </p>
-
-                    <strong>Suggested actions:</strong>
-
-                    <ul>
-
-                        <li>
-                            Conduct a field inspection to verify detected
-                            weed regions.
-                        </li>
-
-                        <li>
-                            Identify weed species and assess their growth
-                            stage before selecting treatment.
-                        </li>
-
-                        <li>
-                            Prioritize heavily affected areas for suitable
-                            weed management.
-                        </li>
-
-                        <li>
-                            Consider localized control methods only after
-                            checking crop safety and equipment suitability.
-                        </li>
-
-                        <li>
-                            Monitor the field after treatment to assess
-                            remaining or emerging weeds.
-                        </li>
-
-                    </ul>
-
-                    <p>
-                        <strong>Management priority:</strong>
-                        Detailed field inspection and a planned,
-                        crop-safe management approach.
-                    </p>
-
+                    <span class="priority-badge priority-low">
+                        {{ t('low') }}
+                    </span>
                 {% endif %}
 
             </div>
 
 
-            <div class="recommendation-note">
+            <!-- Prediction images -->
 
-                <strong>Important safety note:</strong>
+            <h3 class="section-heading">
+                Analysis Images
+            </h3>
 
-                These recommendations are based on image segmentation
-                results and weed coverage estimates. They do not confirm
-                weed species or guarantee treatment effectiveness.
-                Verify detected regions and consult suitable agricultural
-                guidance before treatment.
+            <div class="image-grid">
+
+                <div class="image-card">
+                    <h3>{{ t('source_image') }}</h3>
+
+                    <img src="{{ result.source_url }}"
+                         alt="Original uploaded field image"
+                         loading="lazy">
+                </div>
+
+
+                <div class="image-card">
+                    <h3>{{ t('overlay_image') }}</h3>
+
+                    <img src="{{ result.overlay_url }}"
+                         alt="U-Net segmentation overlay"
+                         loading="lazy">
+                </div>
+
+
+                <div class="image-card">
+                    <h3>{{ t('weed_mask') }}</h3>
+
+                    <img src="{{ result.weed_mask_url }}"
+                         alt="Detected weed mask"
+                         loading="lazy">
+                </div>
 
             </div>
 
+
+            <!-- Additional prediction details -->
+
+            <div style="margin-top:22px;">
+
+                <p>
+                    <strong>{{ t('weed_pixels') }}:</strong>
+                    {{ "{:,}".format(result.weed_pixel_count|default(0)|int) }}
+                </p>
+
+                <p>
+                    <strong>{{ t('recommendation') }}:</strong>
+                    {{ result.suppression_recommendation|default('') }}
+                </p>
+
+                <p>
+                    <strong>Processing Device:</strong>
+                    {{ result.processing_device|default(result.device|default('CPU')) }}
+                </p>
+
+            </div>
+
+        </section>
+
+
+        
+<!-- Priority-Based Weed Control Recommendations -->
+
+<section class="card">
+
+    <div class="recommendation-heading">
+        <h2>{{ t('recommendations') }}</h2>
+        <p>{{ t('recommendations_description') }}</p>
+    </div>
+
+    {% set weed_percentage = result.weed_percentage|default(0)|float %}
+
+    {% if weed_percentage < 5 %}
+
+        <!-- LOW WEED PRIORITY -->
+
+        <div class="recommendation-level low">
+
+            <h3>{{ t('low_weed_priority') }}</h3>
+
+            <div class="method-list">
+
+                <div class="method">
+                    <h4>{{ t('low_method_1_title') }}</h4>
+                    <p>{{ t('low_method_1') }}</p>
+                </div>
+
+                <div class="method">
+                    <h4>{{ t('low_method_2_title') }}</h4>
+                    <p>{{ t('low_method_2') }}</p>
+                </div>
+
+                <div class="method">
+                    <h4>{{ t('low_method_3_title') }}</h4>
+                    <p>{{ t('low_method_3') }}</p>
+                </div>
+
+            </div>
         </div>
 
+    {% elif weed_percentage < 20 %}
 
-        <!-- RESULT NAVIGATION -->
+        <!-- MEDIUM WEED PRIORITY -->
 
-        <div class="result-links">
+        <div class="recommendation-level medium">
 
-            <a href="{{ url_for('home') }}">
+            <h3>{{ t('medium_weed_priority') }}</h3>
 
-                <i class="fas fa-redo"></i>
-                Analyze Another Image
+            <div class="method-list">
 
-            </a>
+                <div class="method">
+                    <h4>{{ t('medium_method_1_title') }}</h4>
+                    <p>{{ t('medium_method_1') }}</p>
+                </div>
 
+                <div class="method">
+                    <h4>{{ t('medium_method_2_title') }}</h4>
+                    <p>{{ t('medium_method_2') }}</p>
+                </div>
 
-            {% if session.get('customer_id') %}
+                <div class="method">
+                    <h4>{{ t('medium_method_3_title') }}</h4>
+                    <p>{{ t('medium_method_3') }}</p>
+                </div>
 
-                <a href="{{ url_for('history') }}">
-
-                    <i class="fas fa-history"></i>
-                    View Analysis History
-
-                </a>
-
-            {% else %}
-
-                <a href="{{ url_for('register') }}">
-
-                    <i class="fas fa-user-plus"></i>
-                    Register to Save History
-
-                </a>
-
-            {% endif %}
-
+            </div>
         </div>
 
-    </section>
+    {% else %}
+
+        <!-- HIGH WEED PRIORITY -->
+
+        <div class="recommendation-level high">
+
+            <h3>{{ t('high_weed_priority') }}</h3>
+
+            <div class="method-list">
+
+                <div class="method">
+                    <h4>{{ t('high_method_1_title') }}</h4>
+                    <p>{{ t('high_method_1') }}</p>
+                </div>
+
+                <div class="method">
+                    <h4>{{ t('high_method_2_title') }}</h4>
+                    <p>{{ t('high_method_2') }}</p>
+                </div>
+
+                <div class="method">
+                    <h4>{{ t('high_method_3_title') }}</h4>
+                    <p>{{ t('high_method_3') }}</p>
+                </div>
+
+            </div>
+        </div>
 
     {% endif %}
 
-</div>
+</section>
 
-{% endblock %}
+    <!-- IMPORTANT NOTE -->
 
+    <div class="important-note">
 
-{% block extra_js %}
+        <strong>{{ t('important_note') }}</strong>
+
+        <p>{{ t('weed_safety_note') }}</p>
+
+    </div>
+
+        </section>
+
+    {% endif %}
+
+</main>
+
+<footer class="footer">
+    {{ t('footer_text') }}
+</footer>
+
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+    // Change application language without losing the current page.
+    function changeLanguage(language) {
+        const currentPath = window.location.pathname;
+        const nextPage = encodeURIComponent(currentPath);
 
-    const imageInput = document.getElementById("imageInput");
-    const imagePreview = document.getElementById("imagePreview");
-    const selectedFile = document.getElementById("selectedFile");
-    const uploadError = document.getElementById("uploadError");
-    const analyzeButton = document.getElementById("analyzeButton");
-    const uploadForm = document.getElementById("uploadForm");
-
-    const fieldSelect = document.getElementById("field_id");
-    const newFieldInput = document.getElementById("new_field_name");
-    const fieldNameInput = document.getElementById("field_name");
-
-    const MAX_SIZE = 8 * 1024 * 1024;
-    const MAX_PIXELS = 16000000;
-
-    const ALLOWED_TYPES = [
-        "image/jpeg",
-        "image/png",
-        "image/webp"
-    ];
-
-
-    /* =====================================
-       ERROR DISPLAY
-    ===================================== */
-
-    function showUploadError(message) {
-
-        if (uploadError) {
-            uploadError.textContent = message;
-            uploadError.style.display = "block";
-        }
+        window.location.href =
+            "/set-language/" + encodeURIComponent(language) +
+            "?next=" + nextPage;
     }
 
 
-    function clearUploadError() {
+    // Select an existing field or enter a new field name.
+    const savedField = document.getElementById("saved-field");
+    const fieldName = document.getElementById("field-name");
 
-        if (uploadError) {
-            uploadError.textContent = "";
-            uploadError.style.display = "none";
-        }
+    if (savedField && fieldName) {
+        savedField.addEventListener("change", function () {
+            if (this.value) {
+                fieldName.value = this.value;
+            }
+        });
     }
 
 
-    /* =====================================
-       RESET PREVIEW
-    ===================================== */
-
-    function resetPreview() {
-
-        if (imagePreview) {
-            imagePreview.style.display = "none";
-            imagePreview.removeAttribute("src");
-        }
-
-        if (selectedFile) {
-            selectedFile.textContent = "";
-        }
-    }
-
-
-    /* =====================================
-       IMAGE PREVIEW AND VALIDATION
-    ===================================== */
+    // Display selected image filename.
+    const imageInput = document.getElementById("image");
+    const selectedFile = document.getElementById("selected-file");
 
     if (imageInput) {
-
         imageInput.addEventListener("change", function () {
 
-            clearUploadError();
+            selectedFile.textContent = "";
+
+            if (!this.files || !this.files.length) {
+                return;
+            }
 
             const file = this.files[0];
+            const allowedTypes = [
+                "image/jpeg",
+                "image/png",
+                "image/webp"
+            ];
 
-            if (!file) {
-                resetPreview();
-                return;
-            }
+            const maxSize = 8 * 1024 * 1024;
 
-            if (!ALLOWED_TYPES.includes(file.type)) {
-
-                showUploadError(
-                    "Please select a JPG, JPEG, PNG or WEBP image."
-                );
-
+            if (!allowedTypes.includes(file.type)) {
+                alert("Please select a JPG, JPEG, PNG or WEBP image.");
                 this.value = "";
-                resetPreview();
                 return;
             }
 
-
-            if (file.size > MAX_SIZE) {
-
-                showUploadError(
-                    "Image size must not exceed 8 MB."
-                );
-
+            if (file.size > maxSize) {
+                alert("Image size must not exceed 8 MB.");
                 this.value = "";
-                resetPreview();
                 return;
             }
 
-
-            selectedFile.textContent =
-                "Selected: " + file.name;
-
-
-            const reader = new FileReader();
-
-
-            reader.onload = function (event) {
-
-                const image = new Image();
-
-                image.onload = function () {
-
-                    if (image.width * image.height > MAX_PIXELS) {
-
-                        showUploadError(
-                            "Image dimensions are too large. Please select a smaller image."
-                        );
-
-                        imageInput.value = "";
-                        resetPreview();
-                        return;
-                    }
-
-                    imagePreview.src = event.target.result;
-                    imagePreview.style.display = "block";
-                };
-
-
-                image.onerror = function () {
-
-                    showUploadError(
-                        "The selected file is not a valid image."
-                    );
-
-                    imageInput.value = "";
-                    resetPreview();
-                };
-
-
-                image.src = event.target.result;
-            };
-
-
-            reader.onerror = function () {
-
-                showUploadError(
-                    "Unable to read the selected image."
-                );
-            };
-
-
-            reader.readAsDataURL(file);
-
+            selectedFile.textContent = "Selected: " + file.name;
         });
-
     }
 
 
-    /* =====================================
-       FIELD SELECTION
-    ===================================== */
+    // Show processing message when the form is submitted.
+    const predictionForm = document.getElementById("prediction-form");
+    const analyzeButton = document.getElementById("analyze-button");
+    const loadingText = document.getElementById("loading-text");
 
-    function updateFieldName() {
+    if (predictionForm) {
+        predictionForm.addEventListener("submit", function (event) {
 
-        if (!fieldNameInput) {
-            return;
-        }
-
-        /* Registered user: existing field selected */
-
-        if (fieldSelect && fieldSelect.value.trim()) {
-
-            fieldNameInput.value = fieldSelect.value.trim();
-
-            if (newFieldInput) {
-                newFieldInput.value = "";
-            }
-
-            return;
-        }
-
-        /* Registered user: new field entered */
-
-        if (newFieldInput) {
-
-            fieldNameInput.value = newFieldInput.value.trim();
-
-            return;
-        }
-    }
-
-
-    if (fieldSelect && newFieldInput) {
-
-        fieldSelect.addEventListener("change", function () {
-
-            if (this.value) {
-
-                newFieldInput.value = "";
-
-            }
-
-            updateFieldName();
-
-            clearUploadError();
-
-        });
-
-
-        newFieldInput.addEventListener("input", function () {
-
-            if (this.value.trim()) {
-
-                fieldSelect.value = "";
-
-            }
-
-            updateFieldName();
-
-            clearUploadError();
-
-        });
-
-    }
-
-
-    /* =====================================
-       FORM SUBMISSION
-    ===================================== */
-
-    if (uploadForm && analyzeButton) {
-
-        uploadForm.addEventListener("submit", function (event) {
-
-            clearUploadError();
-
-
-            /* Update submitted field_name */
-
-            updateFieldName();
-
-
-            /* Validate field name */
-
-            if (!fieldNameInput || !fieldNameInput.value.trim()) {
-
+            if (!fieldName.value.trim()) {
                 event.preventDefault();
-
-                showUploadError(
-                    "Please select an existing field or enter an agricultural field name."
-                );
-
-                if (fieldSelect) {
-                    fieldSelect.focus();
-                } else if (fieldNameInput) {
-                    fieldNameInput.focus();
-                }
-
+                alert("Please enter or select an agricultural field name.");
+                fieldName.focus();
                 return;
             }
 
-
-            if (fieldNameInput.value.trim().length > 80) {
-
+            if (!imageInput.files || !imageInput.files.length) {
                 event.preventDefault();
-
-                showUploadError(
-                    "Field name cannot exceed 80 characters."
-                );
-
+                alert("Please select a field image first.");
                 return;
             }
-
-
-            /* Validate image */
-
-            if (!imageInput || !imageInput.files.length) {
-
-                event.preventDefault();
-
-                showUploadError(
-                    "Please select a field image first."
-                );
-
-                return;
-            }
-
-
-            const file = imageInput.files[0];
-
-
-            if (!ALLOWED_TYPES.includes(file.type)) {
-
-                event.preventDefault();
-
-                showUploadError(
-                    "Invalid image format. Select JPG, PNG or WEBP."
-                );
-
-                return;
-            }
-
-
-            if (file.size > MAX_SIZE) {
-
-                event.preventDefault();
-
-                showUploadError(
-                    "Image size must not exceed 8 MB."
-                );
-
-                return;
-            }
-
-
-            /* Prevent repeated submission */
 
             analyzeButton.disabled = true;
-
-            analyzeButton.innerHTML =
-                '<i class="fas fa-spinner fa-spin"></i> Analyzing Image...';
-
+            loadingText.style.display = "block";
         });
-
     }
-
-
-    /* =====================================
-       SCROLL TO PREDICTION RESULTS
-    ===================================== */
-
-    const results = document.getElementById("predictionResults");
-
-    if (results) {
-
-        setTimeout(function () {
-
-            results.scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
-
-        }, 300);
-
-    }
-
-});
 </script>
 
-{% endblock %}
+</body>
+</html>
